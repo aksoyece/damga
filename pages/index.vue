@@ -211,15 +211,16 @@ function formatStampDate(iso?: string): string | undefined {
           </p>
         </div>
       </div>
-      <div class="archive-preview-grid">
+      <div class="stack stack--archive">
         <PlaceCard
           v-for="place in recentArchive"
           :key="place.id"
           :place="place"
           saved
-          compact
+          show-actions
           @open="openPlace(place.id)"
-          @select="openPlace(place.id)"
+          @remove="handleRemovePlace(place.id)"
+          @mark-visited="placesStore.markAsVisited(place.id)"
         />
       </div>
     </section>
@@ -424,12 +425,11 @@ function formatStampDate(iso?: string): string | undefined {
   color: var(--text-subtle);
 }
 
-.archive-preview-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
-  padding: 0.5rem 0 0.25rem;
-  overflow: visible;
+.stack--archive {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  padding: 0.35rem 0 0.25rem;
 }
 
 .panel--places {

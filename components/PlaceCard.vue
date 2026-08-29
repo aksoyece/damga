@@ -47,7 +47,6 @@ function formatDate(iso?: string): string | undefined {
 
 function onCardClick() {
   emit('select')
-  if (props.compact) emit('open')
 }
 </script>
 

@@ -460,10 +460,10 @@ select {
 }
 
 .saved-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
-  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  padding: 1.25rem 0.35rem 0.75rem;
   margin-top: 0.75rem;
   overflow: visible;
 }
