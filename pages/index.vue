@@ -54,8 +54,16 @@ const savedLookup = computed(() => {
 
 const recentArchive = computed(() =>
   [...savedPlaces.value]
-    .sort((a, b) => (b.savedAt > a.savedAt ? 1 : -1))
+    .sort((a, b) => {
+      const aKey = [a.visitedAt, a.savedAt].filter(Boolean).sort().at(-1) ?? a.savedAt
+      const bKey = [b.visitedAt, b.savedAt].filter(Boolean).sort().at(-1) ?? b.savedAt
+      return bKey.localeCompare(aKey)
+    })
     .slice(0, 3),
+)
+
+const archiveRemaining = computed(() =>
+  Math.max(0, savedPlaces.value.length - recentArchive.value.length),
 )
 
 const mapPlacesAll = computed(() => {
@@ -196,18 +204,22 @@ function formatStampDate(iso?: string): string | undefined {
           <p class="panel__title">Son kayıtlarınız</p>
           <p class="panel__subtitle">Arşivinizden</p>
         </div>
-        <NuxtLink to="/saved" class="btn btn--ghost btn--sm">Tüm arşiv →</NuxtLink>
+        <div class="archive-head-actions">
+          <NuxtLink to="/saved" class="btn btn--ghost btn--sm">Tüm arşiv →</NuxtLink>
+          <p v-if="archiveRemaining > 0" class="archive-remaining">
+            +{{ archiveRemaining }} mekan daha
+          </p>
+        </div>
       </div>
-      <div class="stack">
+      <div class="archive-preview-grid">
         <PlaceCard
           v-for="place in recentArchive"
           :key="place.id"
           :place="place"
           saved
-          show-actions
+          compact
           @open="openPlace(place.id)"
-          @remove="handleRemovePlace(place.id)"
-          @mark-visited="placesStore.markAsVisited(place.id)"
+          @select="openPlace(place.id)"
         />
       </div>
     </section>
@@ -394,6 +406,30 @@ function formatStampDate(iso?: string): string | undefined {
 <style scoped>
 .panel--archive {
   margin-bottom: 1.25rem;
+}
+
+.archive-head-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.archive-remaining {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-subtle);
+}
+
+.archive-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: 0.5rem 0 0.25rem;
+  overflow: visible;
 }
 
 .panel--places {

@@ -57,15 +57,16 @@ withDefaults(defineProps<{
   align-items: center;
   justify-content: center;
   gap: 0.08rem;
-  width: 4.25rem;
-  height: 3.85rem;
-  color: var(--danger);
+  width: 4.6rem;
+  height: 4.15rem;
+  color: #C8102E;
   background: transparent;
   transform: rotate(-8deg);
   user-select: none;
   line-height: 1.05;
   text-align: center;
   flex-shrink: 0;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.12));
 }
 
 .passport-stamp__svg {
@@ -80,8 +81,8 @@ withDefaults(defineProps<{
   position: relative;
   z-index: 1;
   font-family: var(--font-mono);
-  font-size: 0.5rem;
-  font-weight: 700;
+  font-size: 0.5625rem;
+  font-weight: 800;
   letter-spacing: 0.14em;
 }
 
@@ -89,40 +90,49 @@ withDefaults(defineProps<{
   position: relative;
   z-index: 1;
   font-family: var(--font-mono);
-  font-size: 0.4375rem;
-  font-weight: 600;
+  font-size: 0.5rem;
+  font-weight: 700;
   letter-spacing: 0.06em;
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
 .passport-stamp--sm {
-  width: 3.1rem;
-  height: 2.8rem;
+  width: 3.35rem;
+  height: 3rem;
 }
 
 .passport-stamp--sm .passport-stamp__label {
-  font-size: 0.375rem;
+  font-size: 0.4rem;
 }
 
 .passport-stamp--sm .passport-stamp__date {
-  font-size: 0.3125rem;
+  font-size: 0.35rem;
+}
+
+.passport-stamp--md {
+  width: 4.6rem;
+  height: 4.15rem;
 }
 
 .passport-stamp--lg {
-  width: 5.25rem;
-  height: 4.75rem;
+  width: 5.5rem;
+  height: 5rem;
 }
 
 .passport-stamp--lg .passport-stamp__label {
-  font-size: 0.625rem;
+  font-size: 0.65rem;
 }
 
 .passport-stamp--lg .passport-stamp__date {
-  font-size: 0.5rem;
+  font-size: 0.55rem;
 }
 
 .passport-stamp--planned {
-  color: var(--primary);
+  color: #E03E00;
   transform: rotate(6deg);
+}
+
+.passport-stamp--visited {
+  color: #C8102E;
 }
 </style>

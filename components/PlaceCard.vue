@@ -2,12 +2,17 @@
 import type { Place, SavedPlace } from '~/types/place'
 import { getCategoryLabel } from '~/types/place'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   place: Place | SavedPlace
   saved?: boolean
   showActions?: boolean
   highlighted?: boolean
-}>()
+  /** Ana sayfa önizleme: sadece başlık, kategori, tarih, damga */
+  compact?: boolean
+}>(), {
+  showActions: false,
+  compact: false,
+})
 
 const emit = defineEmits<{
   save: []
@@ -21,10 +26,28 @@ const savedData = computed(() =>
   'status' in props.place ? props.place as SavedPlace : null,
 )
 
+const categoryAccent = computed(() => {
+  const map: Record<string, string> = {
+    restaurant: '#FF5A1F',
+    cafe: '#E11D48',
+    museum: '#2563EB',
+    attraction: '#7C3AED',
+    park: '#059669',
+    monument: '#0891B2',
+    other: '#64748B',
+  }
+  return map[props.place.category] ?? map.other
+})
+
 function formatDate(iso?: string): string | undefined {
   if (!iso) return undefined
   const [y, m, d] = iso.split('-')
   return `${d}.${m}.${y.slice(2)}`
+}
+
+function onCardClick() {
+  emit('select')
+  if (props.compact) emit('open')
 }
 </script>
 
@@ -35,10 +58,11 @@ function formatDate(iso?: string): string | undefined {
       'place-card--highlighted': highlighted,
       'place-card--saved': saved,
       'place-card--visited': savedData?.status === 'visited',
+      'place-card--compact': compact,
     }"
-    @click="emit('select')"
+    :style="{ '--cat-accent': categoryAccent }"
+    @click="onCardClick"
   >
-
     <div class="place-card__body">
       <div class="place-card__header">
         <div class="place-card__info">
@@ -49,32 +73,34 @@ function formatDate(iso?: string): string | undefined {
         <PassportStamp
           v-if="savedData?.status === 'visited'"
           :date="formatDate(savedData.visitedAt)"
-          size="sm"
+          :size="compact ? 'md' : 'md'"
         />
         <PassportStamp
           v-else-if="savedData?.status === 'planned'"
           label="PLAN"
           variant="planned"
-          size="sm"
+          size="md"
         />
       </div>
 
-      <p v-if="savedData?.note" class="place-card__note">{{ savedData.note }}</p>
-      <p v-else-if="place.address" class="place-card__address">{{ place.address }}</p>
+      <template v-if="!compact">
+        <p v-if="savedData?.note" class="place-card__note">{{ savedData.note }}</p>
+        <p v-else-if="place.address" class="place-card__address">{{ place.address }}</p>
 
-      <div v-if="savedData?.rating" class="place-card__rating">
-        <span
-          v-for="star in 5"
-          :key="star"
-          class="place-card__star"
-          :class="{ 'place-card__star--active': star <= savedData.rating! }"
-        >★</span>
-        <span class="place-card__rating-text">{{ savedData.rating }}/5</span>
-      </div>
+        <div v-if="savedData?.rating" class="place-card__rating">
+          <span
+            v-for="star in 5"
+            :key="star"
+            class="place-card__star"
+            :class="{ 'place-card__star--active': star <= savedData.rating! }"
+          >★</span>
+          <span class="place-card__rating-text">{{ savedData.rating }}/5</span>
+        </div>
+      </template>
 
       <footer v-if="savedData" class="place-card__meta">
         <span>KAYIT · {{ formatDate(savedData.savedAt) }}</span>
-        <span v-if="savedData.visitedAt">ZİYARET · {{ formatDate(savedData.visitedAt) }}</span>
+        <span v-if="savedData.visitedAt && !compact">ZİYARET · {{ formatDate(savedData.visitedAt) }}</span>
       </footer>
 
       <div v-if="showActions" class="place-card__actions" @click.stop>
@@ -112,35 +138,63 @@ function formatDate(iso?: string): string | undefined {
 
 <style scoped>
 .place-card {
+  --cat-accent: #FF5A1F;
   cursor: pointer;
   position: relative;
   z-index: 1;
   height: 100%;
+  border: 1.5px solid var(--border);
+  border-left: 4px solid var(--cat-accent);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .place-card:hover {
   z-index: 10;
+  background: #fff;
+  border-color: color-mix(in srgb, var(--cat-accent) 35%, var(--border));
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
 .place-card--highlighted {
-  background: var(--primary-soft-hover);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+  background: #fff;
+  border-color: var(--cat-accent);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 .place-card--visited {
-  background: var(--secondary-soft);
+  background: #fff;
+}
+
+.place-card--compact .place-card__body {
+  padding: 1rem 1.05rem 0.9rem;
+}
+
+.place-card--compact .place-card__title {
+  font-size: 0.95rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.place-card--compact .place-card__meta {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: none;
 }
 
 .place-card__body {
-  padding: 1.35rem 1.35rem 1.2rem;
+  padding: 1.2rem 1.2rem 1.05rem;
 }
 
 .place-card__header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
+  gap: 0.65rem;
+  margin-bottom: 0.35rem;
 }
 
 .place-card__category {
@@ -154,8 +208,8 @@ function formatDate(iso?: string): string | undefined {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--primary);
-  background: rgba(255, 90, 31, 0.14);
+  color: var(--cat-accent);
+  background: color-mix(in srgb, var(--cat-accent) 14%, white);
 }
 
 .place-card__title {
@@ -180,7 +234,7 @@ function formatDate(iso?: string): string | undefined {
   font-style: italic;
   color: var(--text);
   padding-left: 0.625rem;
-  border-left: 2px solid var(--primary);
+  border-left: 2px solid var(--cat-accent);
 }
 
 .place-card__address {
