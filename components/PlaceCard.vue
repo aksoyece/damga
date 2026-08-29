@@ -113,6 +113,13 @@ function formatDate(iso?: string): string | undefined {
 <style scoped>
 .place-card {
   cursor: pointer;
+  position: relative;
+  z-index: 1;
+  height: 100%;
+}
+
+.place-card:hover {
+  z-index: 10;
 }
 
 .place-card--highlighted {

@@ -295,7 +295,7 @@ function formatStampDate(iso?: string): string | undefined {
             Seçilen kategoride mekan yok.
           </div>
 
-          <div v-if="filteredPlaces.length > 0" class="stack">
+          <div v-if="filteredPlaces.length > 0" class="places-rail">
             <PlaceCard
               v-for="place in filteredPlaces"
               :key="place.id"
