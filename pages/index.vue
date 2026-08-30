@@ -244,6 +244,7 @@ function formatStampDate(iso?: string): string | undefined {
           :key="place.id"
           :place="place"
           saved
+          compact
           show-actions
           @open="openPlace(place.id)"
           @remove="handleRemovePlace(place.id)"
@@ -463,8 +464,8 @@ function formatStampDate(iso?: string): string | undefined {
 .stack--archive {
   display: flex;
   flex-direction: column;
-  gap: 1.15rem;
-  padding: 0.35rem 0 0.25rem;
+  gap: 0.85rem;
+  padding: 0.25rem 0 0.15rem;
 }
 
 .places-show-more {

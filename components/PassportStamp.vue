@@ -97,16 +97,17 @@ withDefaults(defineProps<{
 }
 
 .passport-stamp--sm {
-  width: 3.35rem;
-  height: 3rem;
+  width: 2.75rem;
+  height: 2.5rem;
 }
 
 .passport-stamp--sm .passport-stamp__label {
-  font-size: 0.4rem;
+  font-size: 0.375rem;
+  letter-spacing: 0.1em;
 }
 
 .passport-stamp--sm .passport-stamp__date {
-  font-size: 0.35rem;
+  font-size: 0.3125rem;
 }
 
 .passport-stamp--md {

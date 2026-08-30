@@ -7,7 +7,7 @@ const props = withDefaults(defineProps<{
   saved?: boolean
   showActions?: boolean
   highlighted?: boolean
-  /** Ana sayfa önizleme: sadece başlık, kategori, tarih, damga */
+  /** Ana sayfa Arşivinizden önizlemesi: dikeyde sıkı, full-width */
   compact?: boolean
 }>(), {
   showActions: false,
@@ -72,13 +72,13 @@ function onCardClick() {
         <PassportStamp
           v-if="savedData?.status === 'visited'"
           :date="formatDate(savedData.visitedAt)"
-          :size="compact ? 'md' : 'md'"
+          :size="compact ? 'sm' : 'md'"
         />
         <PassportStamp
           v-else-if="savedData?.status === 'planned'"
           label="PLAN"
           variant="planned"
-          size="md"
+          :size="compact ? 'sm' : 'md'"
         />
       </div>
 
@@ -99,7 +99,7 @@ function onCardClick() {
 
       <footer v-if="savedData" class="place-card__meta">
         <span>KAYIT · {{ formatDate(savedData.savedAt) }}</span>
-        <span v-if="savedData.visitedAt && !compact">ZİYARET · {{ formatDate(savedData.visitedAt) }}</span>
+        <span v-if="savedData.visitedAt">ZİYARET · {{ formatDate(savedData.visitedAt) }}</span>
       </footer>
 
       <div v-if="showActions" class="place-card__actions" @click.stop>
@@ -167,11 +167,22 @@ function onCardClick() {
 }
 
 .place-card--compact .place-card__body {
-  padding: 1rem 1.05rem 0.9rem;
+  padding: 0.9rem 1rem 0.85rem;
+}
+
+.place-card--compact .place-card__header {
+  margin-bottom: 0.15rem;
+  gap: 0.5rem;
+}
+
+.place-card--compact .place-card__category {
+  margin-bottom: 0.2rem;
+  padding: 0.12rem 0.4rem;
 }
 
 .place-card--compact .place-card__title {
   font-size: 0.95rem;
+  line-height: 1.25;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -179,9 +190,17 @@ function onCardClick() {
 }
 
 .place-card--compact .place-card__meta {
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
+  margin-top: 0.35rem;
+  padding-top: 0;
   border-top: none;
+  gap: 0.55rem;
+}
+
+.place-card--compact .place-card__actions {
+  margin-top: 0.45rem;
+  padding-top: 0;
+  border-top: none;
+  gap: 0.3rem;
 }
 
 .place-card__body {
