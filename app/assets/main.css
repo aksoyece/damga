@@ -439,24 +439,10 @@ select {
   padding: 0.15rem 0 0.5rem;
 }
 
-/* Keşfedilen mekanlar — yatay ray */
-.places-rail {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  gap: 1rem;
-  padding: 20px;
-  margin: 0 -8px;
-  overflow-x: auto;
-  overflow-y: visible;
-  scroll-snap-type: x proximity;
-  -webkit-overflow-scrolling: touch;
-}
-
-.places-rail > * {
-  flex: 0 0 min(260px, 72vw);
-  width: min(260px, 72vw);
-  scroll-snap-align: start;
+.stack--places {
+  gap: 1.15rem;
+  padding: 0.75rem 0.35rem 1rem;
+  overflow: visible;
 }
 
 .saved-list {
