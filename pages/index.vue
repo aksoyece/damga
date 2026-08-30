@@ -28,7 +28,32 @@ const saveMessage = ref<string | null>(null)
 const hasSearched = ref(false)
 const searchedLocation = ref<string | null>(null)
 
+const PLACES_PAGE_SIZE = 10
+const visiblePlacesCount = ref(PLACES_PAGE_SIZE)
+
 const filteredPlaces = computed(() => filterByCategory(selectedCategory.value))
+
+const visiblePlaces = computed(() =>
+  filteredPlaces.value.slice(0, visiblePlacesCount.value),
+)
+
+const placesRemaining = computed(() =>
+  Math.max(0, filteredPlaces.value.length - visiblePlaces.value.length),
+)
+
+function showMorePlaces() {
+  visiblePlacesCount.value += PLACES_PAGE_SIZE
+}
+
+watch(selectedCategory, () => {
+  visiblePlacesCount.value = PLACES_PAGE_SIZE
+})
+
+watch(filteredPlaces, () => {
+  if (visiblePlacesCount.value < PLACES_PAGE_SIZE) {
+    visiblePlacesCount.value = PLACES_PAGE_SIZE
+  }
+})
 
 const categoryOptions = computed(() =>
   buildCategoryOptions(places.value.map(place => place.category)),
@@ -117,6 +142,7 @@ async function handleSelectResult(result: SearchResult) {
   selectedCategory.value = 'all'
   selectedPlaceId.value = null
   clearResults()
+  visiblePlacesCount.value = PLACES_PAGE_SIZE
   await fetchNearbyPlaces(result.latitude, result.longitude, {
     bounds: result.bounds,
     radiusMeters: NEARBY_SEARCH_RADIUS_M,
@@ -130,6 +156,7 @@ function handleClearSearch() {
   selectedPlaceId.value = null
   selectedCategory.value = 'all'
   clearPlaces()
+  visiblePlacesCount.value = PLACES_PAGE_SIZE
   mapCenter.value = [39.0, 35.0]
   mapBounds.value = null
   mapZoom.value = 6
@@ -310,7 +337,7 @@ function formatStampDate(iso?: string): string | undefined {
 
           <div v-if="filteredPlaces.length > 0" class="stack stack--places">
             <PlaceCard
-              v-for="place in filteredPlaces"
+              v-for="place in visiblePlaces"
               :key="place.id"
               :place="placesStore.getSavedPlace(place.id) ?? place"
               :saved="placesStore.isSaved(place.id)"
@@ -322,6 +349,14 @@ function formatStampDate(iso?: string): string | undefined {
               @mark-visited="placesStore.markAsVisited(place.id)"
               @select="handleSelectPlace(place)"
             />
+            <button
+              v-if="placesRemaining > 0"
+              type="button"
+              class="btn btn--ghost places-show-more"
+              @click="showMorePlaces"
+            >
+              Daha fazla göster (+{{ placesRemaining }})
+            </button>
           </div>
         </section>
 
@@ -430,6 +465,12 @@ function formatStampDate(iso?: string): string | undefined {
   flex-direction: column;
   gap: 1.15rem;
   padding: 0.35rem 0 0.25rem;
+}
+
+.places-show-more {
+  align-self: stretch;
+  margin-top: 0.25rem;
+  width: 100%;
 }
 
 .panel--places {
