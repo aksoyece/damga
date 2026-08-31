@@ -132,6 +132,39 @@ onUnmounted(() => {
   background: var(--bg-card);
 }
 
+.search-input--featured .search-input__field input {
+  padding: 1rem 2.75rem 1rem 1.125rem;
+  border-width: 2px;
+  border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
+  font-size: 1.0625rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.search-input--featured .search-input__field input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.search-input--featured .search-input__clear {
+  width: 1.75rem;
+  height: 1.75rem;
+  right: 0.75rem;
+  font-size: 1rem;
+}
+
+.search-input--compact .search-input__field input {
+  padding: 0.5625rem 2rem 0.5625rem 0.75rem;
+  font-size: 0.8125rem;
+  box-shadow: none;
+}
+
+.search-input--compact .search-input__clear {
+  width: 1.375rem;
+  height: 1.375rem;
+  right: 0.5rem;
+  font-size: 0.8125rem;
+}
+
 /* Tarayıcı varsayılan arama çarpısı — özel temizle butonu kullanılıyor */
 .search-input__field input[type='search']::-webkit-search-cancel-button {
   -webkit-appearance: none;

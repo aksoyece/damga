@@ -107,6 +107,18 @@ const archiveRemaining = computed(() =>
   Math.max(0, savedPlaces.value.length - recentArchive.value.length),
 )
 
+const searchBarMode = computed(() => {
+  if (hasSearched.value) return 'discover'
+  if (savedPlaces.value.length === 0) return 'featured'
+  return 'compact'
+})
+
+const searchInputClass = computed(() => {
+  if (searchBarMode.value === 'featured') return 'search-input--featured'
+  if (searchBarMode.value === 'compact') return 'search-input--compact'
+  return undefined
+})
+
 const mapPlacesAll = computed(() => {
   const byId = new Map<string, Place>()
 
@@ -224,12 +236,20 @@ function formatStampDate(iso?: string): string | undefined {
 
 <template>
   <div class="journal-page" :class="{ 'journal-page--discover': hasSearched }">
-    <section class="journal-search" aria-label="Konum arama">
+    <section
+      class="journal-search"
+      :class="`journal-search--${searchBarMode}`"
+      aria-label="Konum arama"
+    >
       <div class="journal-search__inner">
         <p class="journal-search__label">
           {{ hasSearched ? 'Bölge arama' : 'Şehir veya adres ara' }}
         </p>
+        <p v-if="searchBarMode === 'featured'" class="journal-search__hint">
+          Örneğin Bursa, Kadıköy veya tam bir adres yazın — ardından mekanları keşfedip arşivinize ekleyin.
+        </p>
         <SearchInput
+          :class="searchInputClass"
           :autofocus="!hasSearched"
           :loading="searchLoading"
           :error="searchError"

@@ -315,6 +315,48 @@ select {
   color: var(--text-muted);
 }
 
+.journal-search__hint {
+  margin: 0 0 0.85rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.journal-search--featured {
+  padding: 1.35rem 0 1.5rem;
+}
+
+.journal-search--featured .journal-search__inner {
+  max-width: 40rem;
+}
+
+.journal-search--featured .journal-search__label {
+  margin-bottom: 0.5rem;
+  font-size: 0.6875rem;
+  text-align: center;
+}
+
+.journal-search--featured .journal-search__hint {
+  text-align: center;
+}
+
+.journal-search--compact {
+  padding: 0.5rem 0;
+}
+
+.journal-search--compact .journal-search__label {
+  margin-bottom: 0.3rem;
+  font-size: 0.5625rem;
+}
+
+.journal-page:has(.journal-search--compact) .page {
+  padding-top: 1rem;
+}
+
+.journal-page:has(.journal-search--featured) .page {
+  padding-top: 1rem;
+}
+
 .journal-page .page {
   padding-top: 1.25rem;
 }
