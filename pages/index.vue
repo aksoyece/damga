@@ -30,6 +30,11 @@ const searchedLocation = ref<string | null>(null)
 
 const PLACES_PAGE_SIZE = 10
 const visiblePlacesCount = ref(PLACES_PAGE_SIZE)
+const lastNearbySearch = ref<{
+  latitude: number
+  longitude: number
+  options: { bounds?: [[number, number], [number, number]]; radiusMeters?: number }
+} | null>(null)
 
 const filteredPlaces = computed(() => filterByCategory(selectedCategory.value))
 
@@ -144,10 +149,22 @@ async function handleSelectResult(result: SearchResult) {
   selectedPlaceId.value = null
   clearResults()
   visiblePlacesCount.value = PLACES_PAGE_SIZE
-  await fetchNearbyPlaces(result.latitude, result.longitude, {
+  const fetchOptions = {
     bounds: searchArea.bounds,
     radiusMeters: searchArea.radiusMeters,
-  })
+  }
+  lastNearbySearch.value = {
+    latitude: result.latitude,
+    longitude: result.longitude,
+    options: fetchOptions,
+  }
+  await fetchNearbyPlaces(result.latitude, result.longitude, fetchOptions)
+}
+
+async function retryNearbySearch() {
+  if (!lastNearbySearch.value) return
+  const { latitude, longitude, options } = lastNearbySearch.value
+  await fetchNearbyPlaces(latitude, longitude, options)
 }
 
 function handleClearSearch() {
@@ -157,6 +174,7 @@ function handleClearSearch() {
   selectedPlaceId.value = null
   selectedCategory.value = 'all'
   clearPlaces()
+  lastNearbySearch.value = null
   visiblePlacesCount.value = PLACES_PAGE_SIZE
   mapCenter.value = [39.0, 35.0]
   mapBounds.value = null
@@ -315,9 +333,18 @@ function formatStampDate(iso?: string): string | undefined {
             <span v-if="placesLoading" class="loading-pill">Yükleniyor</span>
           </div>
 
-          <p v-if="placesError" class="alert alert--error">
-            {{ placesError }}
-          </p>
+          <div v-if="placesError" class="alert alert--error places-error">
+            <p>{{ placesError }}</p>
+            <button
+              v-if="lastNearbySearch"
+              type="button"
+              class="btn btn--ghost btn--sm"
+              :disabled="placesLoading"
+              @click="retryNearbySearch"
+            >
+              Tekrar dene
+            </button>
+          </div>
 
           <div v-if="placesLoading" class="panel__hint">
             <template v-if="gridProgress">
@@ -521,6 +548,18 @@ function formatStampDate(iso?: string): string | undefined {
 
 .selected-place__stamp {
   margin-bottom: 1rem;
+}
+
+.places-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.places-error p {
+  margin: 0;
+  flex: 1 1 12rem;
 }
 
 @media (min-width: 960px) {

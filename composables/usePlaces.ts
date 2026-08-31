@@ -12,27 +12,19 @@ const OVERPASS_FETCH_TIMEOUT_MS = 35_000
 
 function buildPoiSelectorsBbox(south: number, west: number, north: number, east: number): string {
   return `
-      node["tourism"](${south},${west},${north},${east});
-      way["tourism"](${south},${west},${north},${east});
-      node["amenity"~"cafe|restaurant|museum|fast_food"](${south},${west},${north},${east});
-      way["amenity"~"cafe|restaurant|museum|fast_food"](${south},${west},${north},${east});
-      node["leisure"~"park|garden"](${south},${west},${north},${east});
-      way["leisure"~"park|garden"](${south},${west},${north},${east});
-      node["historic"](${south},${west},${north},${east});
-      way["historic"](${south},${west},${north},${east});
+      nwr["tourism"](${south},${west},${north},${east});
+      nwr["amenity"~"cafe|restaurant|museum|fast_food"](${south},${west},${north},${east});
+      nwr["leisure"~"park|garden"](${south},${west},${north},${east});
+      nwr["historic"](${south},${west},${north},${east});
   `
 }
 
 function buildPoiSelectorsAround(latitude: number, longitude: number, radiusMeters: number): string {
   return `
-      node["tourism"](around:${radiusMeters},${latitude},${longitude});
-      way["tourism"](around:${radiusMeters},${latitude},${longitude});
-      node["amenity"~"cafe|restaurant|museum|fast_food"](around:${radiusMeters},${latitude},${longitude});
-      way["amenity"~"cafe|restaurant|museum|fast_food"](around:${radiusMeters},${latitude},${longitude});
-      node["leisure"~"park|garden"](around:${radiusMeters},${latitude},${longitude});
-      way["leisure"~"park|garden"](around:${radiusMeters},${latitude},${longitude});
-      node["historic"](around:${radiusMeters},${latitude},${longitude});
-      way["historic"](around:${radiusMeters},${latitude},${longitude});
+      nwr["tourism"](around:${radiusMeters},${latitude},${longitude});
+      nwr["amenity"~"cafe|restaurant|museum|fast_food"](around:${radiusMeters},${latitude},${longitude});
+      nwr["leisure"~"park|garden"](around:${radiusMeters},${latitude},${longitude});
+      nwr["historic"](around:${radiusMeters},${latitude},${longitude});
   `
 }
 
@@ -41,9 +33,10 @@ function buildNearbyQueryAround(
   longitude: number,
   radiusMeters: number,
   resultLimit = OVERPASS_AROUND_RESULT_LIMIT,
+  timeoutSec = 25,
 ): string {
   return `
-    [out:json][timeout:30];
+    [out:json][timeout:${timeoutSec}];
     (
       ${buildPoiSelectorsAround(latitude, longitude, radiusMeters)}
     );
@@ -54,7 +47,7 @@ function buildNearbyQueryAround(
 function buildNearbyQueryFromBounds(
   bounds: [[number, number], [number, number]],
   resultLimit = OVERPASS_BBOX_RESULT_LIMIT,
-  timeoutSec = 45,
+  timeoutSec = 25,
 ): string {
   const [[south, west], [north, east]] = bounds
 
@@ -99,7 +92,63 @@ async function fetchFromOverpass(query: string): Promise<OverpassResponse> {
     method: 'POST',
     body: { query },
     timeout: OVERPASS_FETCH_TIMEOUT_MS,
+    retry: 0,
   })
+}
+
+interface NearbyFetchPlan {
+  mode: 'around-capped' | 'bbox' | 'around'
+  query: string
+  logExtra?: Record<string, number | string>
+}
+
+function buildNearbyFetchPlans(
+  latitude: number,
+  longitude: number,
+  options: FetchNearbyOptions,
+  radiusMeters: number,
+): NearbyFetchPlan[] {
+  const plans: NearbyFetchPlan[] = []
+
+  if (options.bounds && shouldUseGridForBounds(options.bounds)) {
+    const radii = [
+      Math.max(radiusMeters, LARGE_AREA_SEARCH_RADIUS_M),
+      NEARBY_SEARCH_RADIUS_M,
+      3000,
+    ]
+
+    for (const radius of [...new Set(radii)]) {
+      plans.push({
+        mode: 'around-capped',
+        query: buildNearbyQueryAround(latitude, longitude, radius, 120, 20),
+        logExtra: { yarıçapKm: Math.round(radius / 100) / 10 },
+      })
+    }
+    return plans
+  }
+
+  if (options.bounds) {
+    plans.push({
+      mode: 'bbox',
+      query: buildNearbyQueryFromBounds(options.bounds, 120, 20),
+    })
+    plans.push({
+      mode: 'around',
+      query: buildNearbyQueryAround(latitude, longitude, radiusMeters, 100, 18),
+    })
+    return plans
+  }
+
+  plans.push({
+    mode: 'around',
+    query: buildNearbyQueryAround(latitude, longitude, radiusMeters, 150, 22),
+  })
+  plans.push({
+    mode: 'around',
+    query: buildNearbyQueryAround(latitude, longitude, Math.min(radiusMeters, 3500), 80, 15),
+  })
+
+  return plans
 }
 
 export interface FetchNearbyOptions {
@@ -112,10 +161,15 @@ export interface GridProgress {
   total: number
 }
 
+export interface FetchPlaceByIdOptions {
+  /** Yerel veri zaten gösteriliyorsa API çağrısını arka planda tut */
+  silent?: boolean
+}
+
 export function usePlaces() {
   const loading = ref(false)
   const error = ref<string | null>(null)
-  const places = ref<Place[]>([])
+  const places = useState<Place[]>('places-cache', () => [])
   const gridProgress = ref<GridProgress | null>(null)
 
   async function fetchNearbyPlaces(
@@ -128,28 +182,28 @@ export function usePlaces() {
     gridProgress.value = null
 
     const radiusMeters = options.radiusMeters ?? NEARBY_SEARCH_RADIUS_M
+    const plans = buildNearbyFetchPlans(latitude, longitude, options, radiusMeters)
+    let lastError: unknown = null
 
     try {
-      // Geniş il bbox'ı → grid yerine merkez + sabit yarıçap (daha hızlı, stabil)
-      if (options.bounds && shouldUseGridForBounds(options.bounds)) {
-        const effectiveRadius = Math.max(radiusMeters, LARGE_AREA_SEARCH_RADIUS_M)
-        const query = buildNearbyQueryAround(latitude, longitude, effectiveRadius)
-        const data = await fetchFromOverpass(query)
-        places.value = mapOverpassResponse(data.elements)
-        logOverpassStats('around-capped', data.elements.length, places.value.length, {
-          yarıçapKm: Math.round(effectiveRadius / 100) / 10,
-        })
-        return places.value
+      for (const plan of plans) {
+        try {
+          const data = await fetchFromOverpass(plan.query)
+          places.value = mapOverpassResponse(data.elements)
+          logOverpassStats(plan.mode, data.elements.length, places.value.length, plan.logExtra)
+
+          if (places.value.length > 0) {
+            return places.value
+          }
+        } catch (err) {
+          lastError = err
+        }
       }
 
-      const query = options.bounds
-        ? buildNearbyQueryFromBounds(options.bounds)
-        : buildNearbyQueryAround(latitude, longitude, radiusMeters)
+      if (lastError) {
+        throw lastError
+      }
 
-      const mode = options.bounds ? 'bbox' : 'around'
-      const data = await fetchFromOverpass(query)
-      places.value = mapOverpassResponse(data.elements)
-      logOverpassStats(mode, data.elements.length, places.value.length)
       return places.value
     } catch (err) {
       error.value = normalizeError(err, 'Mekanlar yüklenirken bir hata oluştu.')
@@ -161,18 +215,25 @@ export function usePlaces() {
     }
   }
 
-  async function fetchPlaceById(placeId: string): Promise<Place | null> {
+  async function fetchPlaceById(
+    placeId: string,
+    options: FetchPlaceByIdOptions = {},
+  ): Promise<Place | null> {
     const cached = places.value.find(place => place.id === placeId)
     if (cached) return cached
 
     const [type, osmId] = placeId.split('-')
     if (!type || !osmId) return null
 
-    loading.value = true
-    error.value = null
+    const silent = options.silent ?? false
+
+    if (!silent) {
+      loading.value = true
+      error.value = null
+    }
 
     const query = `
-      [out:json][timeout:20];
+      [out:json][timeout:10];
       ${type}(${osmId});
       out center;
     `
@@ -188,10 +249,14 @@ export function usePlaces() {
 
       return place
     } catch (err) {
-      error.value = normalizeError(err, 'Mekan detayı yüklenirken bir hata oluştu.')
+      if (!silent) {
+        error.value = normalizeError(err, 'Mekan detayı yüklenirken bir hata oluştu.')
+      }
       return null
     } finally {
-      loading.value = false
+      if (!silent) {
+        loading.value = false
+      }
     }
   }
 
