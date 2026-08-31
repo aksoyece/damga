@@ -607,29 +607,17 @@ function formatStampDate(iso?: string): string | undefined {
 
 .map-expandable--center :deep(.map-wrapper__frame),
 .map-expandable--center :deep(.map-wrapper__canvas) {
-  min-height: 24rem;
+  min-height: 22rem;
+  height: 22rem;
+  max-height: 22rem;
 }
 
 @media (min-width: 960px) {
-  .discover-layout .map-expandable--center {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .discover-layout .map-expandable--center :deep(.map-wrapper) {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
   .discover-layout .map-expandable--center :deep(.map-wrapper__frame),
   .discover-layout .map-expandable--center :deep(.map-wrapper__canvas) {
-    flex: 1;
-    min-height: 16rem;
-    height: 100%;
+    min-height: 24rem;
+    height: 24rem;
+    max-height: 24rem;
   }
 }
 
@@ -661,7 +649,9 @@ function formatStampDate(iso?: string): string | undefined {
 .map-expandable:focus-within :deep(.map-wrapper__frame),
 .map-expandable:hover :deep(.map-wrapper__canvas),
 .map-expandable:focus-within :deep(.map-wrapper__canvas) {
-  min-height: 34rem;
+  min-height: 30rem;
+  height: 30rem;
+  max-height: min(30rem, calc(100vh - var(--header-height) - 12rem));
 }
 
 .map-expandable:hover :deep(.map-wrapper__hint),
