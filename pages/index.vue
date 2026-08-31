@@ -223,7 +223,26 @@ function formatStampDate(iso?: string): string | undefined {
 </script>
 
 <template>
-  <div class="page" :class="{ 'page--discover': hasSearched }">
+  <div class="journal-page" :class="{ 'journal-page--discover': hasSearched }">
+    <section class="journal-search" aria-label="Konum arama">
+      <div class="journal-search__inner">
+        <p class="journal-search__label">
+          {{ hasSearched ? 'Bölge arama' : 'Şehir veya adres ara' }}
+        </p>
+        <SearchInput
+          :autofocus="!hasSearched"
+          :loading="searchLoading"
+          :error="searchError"
+          :results="results"
+          :selection-made="hasSearched"
+          @search="handleSearch"
+          @select="handleSelectResult"
+          @clear="handleClearSearch"
+        />
+      </div>
+    </section>
+
+    <div class="page">
     <header class="page-hero" :class="{ 'page-hero--compact': hasSearched }">
       <div class="page-hero__content">
         <span class="page-hero__badge">Kişisel gezi defteri</span>
@@ -252,7 +271,26 @@ function formatStampDate(iso?: string): string | undefined {
         </div>
       </div>
 
-      <MemoryCardPreview v-if="!hasSearched && savedPlaces.length === 0" sample />
+      <div v-if="!hasSearched && savedPlaces.length === 0" class="page-hero__aside">
+        <MemoryCardPreview sample />
+
+        <div class="draft-card draft-card--hero">
+          <p class="draft-card__label">Böyle görünecek</p>
+          <div class="draft-card__inner">
+            <article class="draft-entry">
+              <div class="draft-entry__head">
+                <div>
+                  <h4>Uludağ Teleferik</h4>
+                  <span class="draft-entry__tag">TURİSTİK</span>
+                </div>
+                <PassportStamp label="PLAN" variant="planned" size="sm" />
+              </div>
+              <p class="draft-entry__note">“Manzara için kesinlikle tekrar…”</p>
+              <span class="draft-entry__meta">KAYIT · BEKLEMEDE</span>
+            </article>
+          </div>
+        </div>
+      </div>
     </header>
 
     <p v-if="saveMessage" class="alert alert--success">
@@ -284,50 +322,6 @@ function formatStampDate(iso?: string): string | undefined {
           @remove="handleRemovePlace(place.id)"
           @mark-visited="placesStore.markAsVisited(place.id)"
         />
-      </div>
-    </section>
-
-    <section
-      class="panel panel--search"
-      :class="{ 'search-landing': !hasSearched }"
-    >
-      <div class="panel__head">
-        <div>
-          <p class="panel__title">{{ hasSearched ? 'Bölge arama' : 'Başlamak için bir şehir veya adres arayın' }}</p>
-          <p v-if="!hasSearched" class="panel__subtitle">Konum arama</p>
-        </div>
-      </div>
-
-      <p v-if="!hasSearched" class="panel__hint search-landing__hint">
-        Örneğin Bursa, Kadıköy veya tam bir adres yazın — ardından mekanları keşfedip arşivinize ekleyin.
-      </p>
-
-      <SearchInput
-        :autofocus="!hasSearched"
-        :loading="searchLoading"
-        :error="searchError"
-        :results="results"
-        :selection-made="hasSearched"
-        @search="handleSearch"
-        @select="handleSelectResult"
-        @clear="handleClearSearch"
-      />
-
-      <div v-if="!hasSearched" class="draft-card">
-        <p class="draft-card__label">Böyle görünecek</p>
-        <div class="draft-card__inner">
-          <article class="draft-entry">
-            <div class="draft-entry__head">
-              <div>
-                <h4>Uludağ Teleferik</h4>
-                <span class="draft-entry__tag">TURİSTİK</span>
-              </div>
-              <PassportStamp label="PLAN" variant="planned" size="sm" />
-            </div>
-            <p class="draft-entry__note">“Manzara için kesinlikle tekrar…”</p>
-            <span class="draft-entry__meta">KAYIT · BEKLEMEDE</span>
-          </article>
-        </div>
       </div>
     </section>
 
@@ -500,6 +494,7 @@ function formatStampDate(iso?: string): string | undefined {
       <p v-if="placesStore.storageError" class="discover-layout__storage-error alert alert--error">
         {{ placesStore.storageError }}
       </p>
+    </div>
     </div>
   </div>
 </template>
