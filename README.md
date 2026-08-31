@@ -38,7 +38,7 @@ npm run dev
 
 - Nuxt 4 / Vue 3
 - Pinia (localStorage ile kalıcı arşiv)
-- Leaflet (konum referansı — birincil deneyim değil)
+- Leaflet (OpenStreetMap tile + konum referansı)
 - Nominatim + Overpass API (OpenStreetMap veri kaynağı)
 
 ## Proje yapısı

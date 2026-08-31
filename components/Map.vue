@@ -89,26 +89,12 @@ function placesSignature(places: Place[]): string {
   return `${places.length}:${head?.id}:${tail?.id}:${props.selectedPlaceId ?? ''}`
 }
 
-const CARTO_POSITRON_URL = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
-const ESRI_LIGHT_GRAY_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+const OSM_TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 
 function createBasemapLayer(leaflet: typeof import('leaflet')) {
-  const cartoKey = useRuntimeConfig().public.cartoApiKey as string
-
-  if (cartoKey) {
-    return leaflet.tileLayer(`${CARTO_POSITRON_URL}?key=${cartoKey}`, {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 20,
-      keepBuffer: 1,
-      updateWhenIdle: true,
-      updateWhenZooming: false,
-    })
-  }
-
-  return leaflet.tileLayer(ESRI_LIGHT_GRAY_URL, {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; Esri',
-    maxZoom: 16,
+  return leaflet.tileLayer(OSM_TILE_URL, {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19,
     keepBuffer: 1,
     updateWhenIdle: true,
     updateWhenZooming: false,

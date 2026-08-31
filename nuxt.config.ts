@@ -17,7 +17,6 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      cartoApiKey: '',
       siteUrl,
     },
   },
@@ -63,15 +62,15 @@ export default defineNuxtConfig({
         },
         {
           rel: 'preconnect',
-          href: 'https://a.basemaps.cartocdn.com',
+          href: 'https://a.tile.openstreetmap.org',
         },
         {
           rel: 'preconnect',
-          href: 'https://b.basemaps.cartocdn.com',
+          href: 'https://b.tile.openstreetmap.org',
         },
         {
           rel: 'dns-prefetch',
-          href: 'https://server.arcgisonline.com',
+          href: 'https://c.tile.openstreetmap.org',
         },
         {
           rel: 'preconnect',
