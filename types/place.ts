@@ -248,18 +248,22 @@ export function parseNominatimBounds(
  */
 export function clampBoundsForOverpass(
   bounds: [[number, number], [number, number]],
-  centerLat: number,
-  centerLon: number,
+  centerLat?: number,
+  centerLon?: number,
   thresholdKm = OVERPASS_BBOX_CLAMP_THRESHOLD_KM,
   maxSpanKm = OVERPASS_BBOX_CLAMP_MAX_SPAN_KM,
 ): [[number, number], [number, number]] {
+  const [[south, west], [north, east]] = bounds
+  const lat = centerLat ?? (south + north) / 2
+  const lon = centerLon ?? (west + east) / 2
+
   const { latKm, lonKm } = boundsSpanKm(bounds)
   if (Math.max(latKm, lonKm) <= thresholdKm) {
     return bounds
   }
 
   const radiusM = (maxSpanKm / 2) * 1000
-  return boundsFromRadius(centerLat, centerLon, radiusM)
+  return boundsFromRadius(lat, lon, radiusM)
 }
 
 /** Nominatim POI sonucunu Place modeline dönüştürür */

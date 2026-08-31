@@ -1,6 +1,5 @@
 import type { NominatimResult, SearchResult } from '~/types/place'
-import { mapNominatimToSearchResult } from '~/types/place'
-
+import { boundsSpanKm, mapNominatimToSearchResult, parseNominatimBounds } from '~/types/place'
 let lastRequestTime = 0
 const MIN_REQUEST_INTERVAL = 1100
 
@@ -13,7 +12,9 @@ function rankSearchResult(result: NominatimResult): number {
     else if (result.type === 'village') score += 1
   }
 
-  if (result.addresstype === 'province') score += 1.75
+  if (result.class === 'boundary' && result.type === 'administrative') {
+    score -= 3
+  }
   if (result.addresstype === 'city') score += 1.5
   if (result.addresstype === 'county' || result.addresstype === 'municipality') score += 1
 
@@ -31,14 +32,21 @@ const EXCLUDED_ADDRESS_TYPES = new Set([
 ])
 
 function isUsefulSearchResult(result: NominatimResult): boolean {
-  // Yalnızca bölge/ülke/kıta gibi çok geniş sonuçları ele (ör. "Marmara Bölgesi, Türkiye")
   if (result.addresstype && EXCLUDED_ADDRESS_TYPES.has(result.addresstype)) {
     return false
   }
 
+  // İl/düzeyi idari sınır (ör. "Ankara, İç Anadolu") — merkez güneyde kalır, tarama kayar
+  if (result.class === 'boundary' && result.type === 'administrative') {
+    const bounds = parseNominatimBounds(result.boundingbox)
+    if (bounds) {
+      const { latKm, lonKm } = boundsSpanKm(bounds)
+      if (Math.max(latKm, lonKm) > 55) return false
+    }
+  }
+
   return true
 }
-
 function prepareSearchResults(results: NominatimResult[]): NominatimResult[] {
   return sortSearchResults(results.filter(isUsefulSearchResult))
 }
