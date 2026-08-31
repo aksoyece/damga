@@ -7,8 +7,8 @@
             <Logo :size="40" />
           </span>
           <span class="layout__brand-text">
-            <strong>Şehir Hafızası</strong>
-            <small>Kişisel şehir hafızası</small>
+            <strong>Damga</strong>
+            <small>Kişisel gezi defteri</small>
           </span>
         </NuxtLink>
 

@@ -1,6 +1,6 @@
-# Şehir Hafızası
+# Damga
 
-Kişisel şehir hafıza uygulaması — bir şehirdeki ilgi çekici yerleri keşfedin, kendi gezi listenizi oluşturun, not alın ve ziyaretlerinizi damgalayın.
+Kişisel gezi defteri — bir şehirdeki ilgi çekici yerleri keşfedin, kendi gezi listenizi oluşturun, not alın ve ziyaretlerinizi damgalayın.
 
 ## Temel fikir
 
@@ -19,7 +19,7 @@ Bu nedenle projenin odağı harita değil, **kişisel şehir hafızası**dır.
 
 ## Proje özeti
 
-Şehir Hafızası, kullanıcıların bir şehirde bulunan ilgi çekici yerleri keşfedebileceği ve kendi gezi listesini oluşturabileceği bir web uygulamasıdır.
+Damga, kullanıcıların bir şehirde bulunan ilgi çekici yerleri keşfedebileceği ve kendi gezi listesini oluşturabileceği bir web uygulamasıdır.
 
 - **Harita tarafı:** OpenStreetMap verileri (Overpass API)
 - **Arama:** Nominatim API (şehir, adres, mekan)

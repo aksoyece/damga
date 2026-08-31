@@ -34,7 +34,7 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: 'Şehir Hafızası',
+      title: 'Damga',
       link: [
         {
           rel: 'icon',
@@ -87,15 +87,15 @@ export default defineNuxtConfig({
       meta: [
         {
           name: 'description',
-          content: 'Kişisel şehir hafızanız — mekan keşfedin, listenizi oluşturun, not alın ve ziyaret damgalarınızı saklayın. Hesap yok; verileriniz tarayıcınızda kalır.',
+          content: 'Damga — kişisel gezi defteriniz. Mekan keşfedin, listenizi oluşturun, not alın ve ziyaretlerinizi damgalayın. Hesap yok; verileriniz tarayıcınızda kalır.',
         },
         {
           property: 'og:title',
-          content: 'Şehir Hafızası',
+          content: 'Damga',
         },
         {
           property: 'og:description',
-          content: 'Kişisel şehir hafızanız — mekan keşfedin, listenizi oluşturun, not alın ve ziyaret damgalarınızı saklayın. Hesap yok; verileriniz tarayıcınızda kalır.',
+          content: 'Damga — kişisel gezi defteriniz. Mekan keşfedin, listenizi oluşturun, not alın ve ziyaretlerinizi damgalayın. Hesap yok; verileriniz tarayıcınızda kalır.',
         },
         {
           property: 'og:image',

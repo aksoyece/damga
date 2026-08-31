@@ -223,7 +223,7 @@ function formatStampDate(iso?: string): string | undefined {
   <div class="page">
     <header class="page-hero">
       <div class="page-hero__content">
-        <span class="page-hero__badge">Kişisel şehir hafızası</span>
+        <span class="page-hero__badge">Kişisel gezi defteri</span>
         <h1>Gittiğin yerleri hatırla, not al, damgala</h1>
         <p>
           OpenStreetMap ve Nominatim yalnızca mekan verisi sağlar — bu bir harita
