@@ -233,6 +233,21 @@ export const CATEGORY_LABELS: Record<string, string> = {
   other: 'Diğer',
 }
 
+/** Kart ve harita pinleri için ortak kategori renkleri */
+export const CATEGORY_COLORS: Record<string, string> = {
+  restaurant: '#FF5A1F',
+  cafe: '#E11D48',
+  museum: '#2563EB',
+  attraction: '#7C3AED',
+  park: '#059669',
+  monument: '#0891B2',
+  other: '#64748B',
+}
+
+export function getCategoryColor(category: string): string {
+  return CATEGORY_COLORS[category] ?? CATEGORY_COLORS.other
+}
+
 function resolveCategoryFromTags(tags: Record<string, string>): string {
   if (tags.tourism) return CATEGORY_MAP[tags.tourism] ?? 'attraction'
   if (tags.amenity) return CATEGORY_MAP[tags.amenity] ?? 'other'

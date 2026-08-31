@@ -1,6 +1,6 @@
 ﻿<script setup lang="ts">
 import type { Place, SavedPlace } from '~/types/place'
-import { getCategoryLabel } from '~/types/place'
+import { getCategoryLabel, getCategoryColor } from '~/types/place'
 
 const props = withDefaults(defineProps<{
   place: Place | SavedPlace
@@ -26,18 +26,7 @@ const savedData = computed(() =>
   'status' in props.place ? props.place as SavedPlace : null,
 )
 
-const categoryAccent = computed(() => {
-  const map: Record<string, string> = {
-    restaurant: '#FF5A1F',
-    cafe: '#E11D48',
-    museum: '#2563EB',
-    attraction: '#7C3AED',
-    park: '#059669',
-    monument: '#0891B2',
-    other: '#64748B',
-  }
-  return map[props.place.category] ?? map.other
-})
+const categoryAccent = computed(() => getCategoryColor(props.place.category))
 
 function formatDate(iso?: string): string | undefined {
   if (!iso) return undefined

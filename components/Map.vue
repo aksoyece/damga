@@ -1,6 +1,6 @@
 ﻿<script setup lang="ts">
 import type { Place, SavedPlace } from '~/types/place'
-import { getCategoryLabel } from '~/types/place'
+import { getCategoryLabel, getCategoryColor } from '~/types/place'
 import type { LatLngExpression } from 'leaflet'
 
 const props = withDefaults(defineProps<{
@@ -40,21 +40,10 @@ let lastPlacesSignature = ''
 
 const leafletPromise = import.meta.client ? import('leaflet') : null
 
-const PIN_COLORS: Record<string, string> = {
-  museum: '#1A1A2E',
-  cafe: '#FF5A1F',
-  restaurant: '#E04E1A',
-  park: '#2DD4BF',
-  monument: '#5C5C6E',
-  attraction: '#FF5A1F',
-  other: '#8B8B9A',
-}
-
 function pinColor(place: Place): string {
   const saved = props.savedLookup?.[place.id]
   if (saved?.status === 'visited') return '#1A1A2E'
-  if (saved) return '#FF5A1F'
-  return PIN_COLORS[place.category] ?? PIN_COLORS.other
+  return getCategoryColor(place.category)
 }
 
 function formatStampDate(iso?: string): string {
