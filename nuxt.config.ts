@@ -26,7 +26,7 @@ export default defineNuxtConfig({
             maxDuration: 30,
           },
           'api/places/nearby': {
-            maxDuration: 30,
+            maxDuration: 60,
           },
         },
       },

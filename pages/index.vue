@@ -15,7 +15,6 @@ const {
   error: placesError,
   gridProgress,
   fetchNearbyPlaces,
-  filterByCategory,
   clearPlaces,
 } = usePlaces()
 
@@ -36,7 +35,18 @@ const lastNearbySearch = ref<{
   options: { bounds?: [[number, number], [number, number]]; radiusMeters?: number }
 } | null>(null)
 
-const filteredPlaces = computed(() => filterByCategory(selectedCategory.value))
+const savedIds = computed(() => new Set(savedPlaces.value.map(place => place.id)))
+
+const discoveredPlaces = computed(() =>
+  places.value.filter(place => !savedIds.value.has(place.id)),
+)
+
+const filteredPlaces = computed(() => {
+  if (selectedCategory.value === 'all') {
+    return discoveredPlaces.value
+  }
+  return discoveredPlaces.value.filter(place => place.category === selectedCategory.value)
+})
 
 const visiblePlaces = computed(() =>
   filteredPlaces.value.slice(0, visiblePlacesCount.value),
@@ -61,7 +71,7 @@ watch(filteredPlaces, () => {
 })
 
 const categoryOptions = computed(() =>
-  buildCategoryOptions(places.value.map(place => place.category)),
+  buildCategoryOptions(discoveredPlaces.value.map(place => place.category)),
 )
 
 const selectedPlace = computed(() =>
@@ -360,8 +370,12 @@ function formatStampDate(iso?: string): string | undefined {
             Bu bölgede kaydedilebilecek mekan bulunamadı.
           </div>
 
-          <div v-else-if="!placesLoading && places.length > 0 && filteredPlaces.length === 0" class="panel__hint">
-            Seçilen kategoride mekan yok.
+          <div v-else-if="!placesLoading && places.length > 0 && discoveredPlaces.length === 0" class="panel__hint">
+            Bu bölgedeki mekanların tümü zaten arşivinizde.
+          </div>
+
+          <div v-else-if="!placesLoading && discoveredPlaces.length > 0 && filteredPlaces.length === 0" class="panel__hint">
+            Seçilen kategoride yeni mekan yok.
           </div>
 
           <div v-if="filteredPlaces.length > 0" class="stack stack--places">

@@ -1,7 +1,7 @@
 import type { OverpassElement, Place } from '~/types/place'
 import { NEARBY_SEARCH_RADIUS_M, mapOverpassResponse } from '~/types/place'
 
-const NEARBY_FETCH_TIMEOUT_MS = 30_000
+const NEARBY_FETCH_TIMEOUT_MS = 50_000
 
 function normalizeError(err: unknown, fallback: string): string {
   if (err && typeof err === 'object' && 'data' in err) {
@@ -74,7 +74,7 @@ export function usePlaces() {
       places.value = data.places
 
       if (import.meta.dev) {
-        console.info(`[Places] nominatim-yakın: ${places.value.length} mekan`)
+        console.info(`[Places] yakın: ${places.value.length} mekan`)
       }
 
       return places.value

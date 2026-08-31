@@ -1,5 +1,10 @@
-import type { NominatimResult, Place } from '~/types/place'
-import { mapNominatimPoiToPlace } from '~/types/place'
+import type { NominatimResult, OverpassElement, Place } from '~/types/place'
+import {
+  LARGE_AREA_SEARCH_RADIUS_M,
+  mapNominatimPoiToPlace,
+  mapOverpassResponse,
+} from '~/types/place'
+import { fetchOverpassNearbyPlaces } from '../../utils/overpassClient'
 
 const USER_AGENT = 'SehirHafizaApp/1.0 (Nuxt MVP; educational project)'
 const NOMINATIM_INTERVAL_MS = 1100
@@ -32,7 +37,7 @@ async function searchNominatimPois(
   const params = new URLSearchParams({
     format: 'json',
     addressdetails: '1',
-    limit: '20',
+    limit: '25',
     viewbox,
     bounded: '1',
     countrycodes: 'tr',
@@ -56,27 +61,11 @@ async function searchNominatimPois(
   return Array.isArray(data) ? data as NominatimResult[] : []
 }
 
-export default defineEventHandler(async (event) => {
-  const body = await readBody<{
-    latitude?: number
-    longitude?: number
-    radiusMeters?: number
-  }>(event)
-
-  const latitude = Number(body?.latitude)
-  const longitude = Number(body?.longitude)
-  const radiusMeters = Math.min(
-    Math.max(Number(body?.radiusMeters) || 5000, 1500),
-    8000,
-  )
-
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-    throw createError({
-      statusCode: 400,
-      message: 'Geçerli koordinat gerekli.',
-    })
-  }
-
+async function fetchFromNominatim(
+  latitude: number,
+  longitude: number,
+  radiusMeters: number,
+): Promise<Place[]> {
   const viewbox = viewboxFromRadius(latitude, longitude, radiusMeters)
   const seen = new Set<string>()
   const places: Place[] = []
@@ -88,17 +77,52 @@ export default defineEventHandler(async (event) => {
 
     try {
       const results = await searchNominatimPois(viewbox, search)
-
       for (const result of results) {
         const place = mapNominatimPoiToPlace(result)
         if (!place || seen.has(place.id)) continue
-
         seen.add(place.id)
         places.push(place)
       }
     } catch {
-      // Tek kategori başarısız olsa bile diğerlerini dene
+      // Kategori başarısız olsa devam et
     }
+  }
+
+  return places
+}
+
+export default defineEventHandler(async (event) => {
+  const body = await readBody<{
+    latitude?: number
+    longitude?: number
+    radiusMeters?: number
+  }>(event)
+
+  const latitude = Number(body?.latitude)
+  const longitude = Number(body?.longitude)
+  const radiusMeters = Math.min(
+    Math.max(Number(body?.radiusMeters) || LARGE_AREA_SEARCH_RADIUS_M, 1500),
+    LARGE_AREA_SEARCH_RADIUS_M,
+  )
+
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    throw createError({
+      statusCode: 400,
+      message: 'Geçerli koordinat gerekli.',
+    })
+  }
+
+  let places: Place[] = []
+
+  try {
+    const elements = await fetchOverpassNearbyPlaces(latitude, longitude, radiusMeters)
+    places = mapOverpassResponse(elements as OverpassElement[])
+  } catch {
+    places = []
+  }
+
+  if (places.length === 0) {
+    places = await fetchFromNominatim(latitude, longitude, Math.min(radiusMeters, 8000))
   }
 
   if (places.length === 0) {
