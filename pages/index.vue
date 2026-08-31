@@ -333,7 +333,7 @@ function formatStampDate(iso?: string): string | undefined {
 
     <div v-if="hasSearched" class="discover-layout">
       <section class="discover-layout__map map-section">
-        <div class="map-expandable map-expandable--center">
+        <div class="discover-map">
           <ClientOnly>
             <Map
               :center="mapCenter"
@@ -598,71 +598,19 @@ function formatStampDate(iso?: string): string | undefined {
   flex: 1 1 12rem;
 }
 
-@media (min-width: 960px) {
-  .discover-layout:has(.map-expandable:hover),
-  .discover-layout:has(.map-expandable:focus-within) {
-    grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
-  }
-}
-
-.map-expandable--center :deep(.map-wrapper__frame),
-.map-expandable--center :deep(.map-wrapper__canvas) {
+.discover-map :deep(.map-wrapper__frame),
+.discover-map :deep(.map-wrapper__canvas) {
   min-height: 22rem;
   height: 22rem;
   max-height: 22rem;
 }
 
 @media (min-width: 960px) {
-  .discover-layout .map-expandable--center :deep(.map-wrapper__frame),
-  .discover-layout .map-expandable--center :deep(.map-wrapper__canvas) {
+  .discover-map :deep(.map-wrapper__frame),
+  .discover-map :deep(.map-wrapper__canvas) {
     min-height: 24rem;
     height: 24rem;
     max-height: 24rem;
-  }
-}
-
-@media (min-width: 960px) {
-  .discover-layout:has(.map-expandable:hover) .discover-layout__sidebar,
-  .discover-layout:has(.map-expandable:focus-within) .discover-layout__sidebar {
-    align-self: start;
-  }
-}
-
-.map-expandable {
-  position: relative;
-  z-index: 1;
-  transition: z-index 0s;
-}
-
-.map-expandable:hover,
-.map-expandable:focus-within {
-  z-index: 30;
-}
-
-.map-expandable:hover :deep(.map-wrapper),
-.map-expandable:focus-within :deep(.map-wrapper) {
-  box-shadow: var(--shadow);
-  border-color: var(--primary);
-}
-
-.map-expandable:hover :deep(.map-wrapper__frame),
-.map-expandable:focus-within :deep(.map-wrapper__frame),
-.map-expandable:hover :deep(.map-wrapper__canvas),
-.map-expandable:focus-within :deep(.map-wrapper__canvas) {
-  min-height: 30rem;
-  height: 30rem;
-  max-height: min(30rem, calc(100vh - var(--header-height) - 12rem));
-}
-
-.map-expandable:hover :deep(.map-wrapper__hint),
-.map-expandable:focus-within :deep(.map-wrapper__hint) {
-  opacity: 0;
-}
-
-@media (max-width: 959px) {
-  .map-expandable :deep(.map-wrapper__frame),
-  .map-expandable :deep(.map-wrapper__canvas) {
-    min-height: 22rem;
   }
 }
 </style>

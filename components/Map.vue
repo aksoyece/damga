@@ -301,7 +301,6 @@ onUnmounted(() => {
         <span class="map-wrapper__title">Konum referansı</span>
         <p class="map-wrapper__subtitle">
           Konum referansı — mekan bulmak için
-          <span v-if="compact" class="map-wrapper__hint"> · üzerine gelince büyür</span>
         </p>
       </div>
       <span v-if="places?.length" class="map-wrapper__count">
@@ -344,15 +343,6 @@ onUnmounted(() => {
   box-shadow: var(--shadow-sm);
   overflow: hidden;
   transition: box-shadow 0.22s ease, border-color 0.22s ease;
-}
-
-.map-wrapper__hint {
-  color: var(--primary);
-  font-family: var(--font-mono);
-  font-size: 0.5625rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 .map-wrapper__header {
