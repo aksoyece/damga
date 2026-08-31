@@ -1,5 +1,5 @@
 import type { OverpassElement, Place } from '~/types/place'
-import { NEARBY_SEARCH_RADIUS_M, mapOverpassResponse } from '~/types/place'
+import { mapOverpassResponse } from '~/types/place'
 
 const NEARBY_FETCH_TIMEOUT_MS = 50_000
 
@@ -25,7 +25,6 @@ function normalizeError(err: unknown, fallback: string): string {
 
 export interface FetchNearbyOptions {
   bounds?: [[number, number], [number, number]]
-  radiusMeters?: number
 }
 
 export interface GridProgress {
@@ -61,12 +60,14 @@ export function usePlaces() {
     error.value = null
     gridProgress.value = null
 
-    const radiusMeters = options.radiusMeters ?? NEARBY_SEARCH_RADIUS_M
-
     try {
       const data = await $fetch<{ places: Place[] }>('/api/places/nearby', {
         method: 'POST',
-        body: { latitude, longitude, radiusMeters },
+        body: {
+          latitude,
+          longitude,
+          ...(options.bounds ? { bounds: options.bounds } : {}),
+        },
         timeout: NEARBY_FETCH_TIMEOUT_MS,
         retry: 0,
       })

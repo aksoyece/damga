@@ -4,9 +4,10 @@ export const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
   'https://overpass.openstreetmap.fr/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter',
+  'https://lz4.overpass-api.de/api/interpreter',
 ]
 
-const ENDPOINT_TIMEOUT_MS = 22_000
+const ENDPOINT_TIMEOUT_MS = 16_000
 
 function isFailedOverpassBody(text: string, status: number): boolean {
   if (status === 429 || status === 502 || status === 503 || status === 504) return true
@@ -62,78 +63,32 @@ export async function fetchOverpassQuery(query: string): Promise<{ elements: unk
   }
 }
 
-export function buildOverpassAroundQuery(
-  latitude: number,
-  longitude: number,
-  radiusMeters: number,
-  selectors: string,
-  resultLimit = 120,
-  timeoutSec = 20,
+/** Overpass bbox: (south, west, north, east) */
+export function buildOverpassBboxQuery(
+  south: number,
+  west: number,
+  north: number,
+  east: number,
+  timeoutSec = 16,
 ): string {
-  const filledSelectors = selectors
-    .replace(/\${radius}/g, String(radiusMeters))
-    .replace(/\${lat}/g, String(latitude))
-    .replace(/\${lon}/g, String(longitude))
-
   return `
-    [out:json][timeout:${timeoutSec}];
-    (
-      ${filledSelectors}
-    );
-    out center ${resultLimit};
-  `
+[out:json][timeout:${timeoutSec}];
+(
+  node["tourism"](${south},${west},${north},${east});
+  node["historic"](${south},${west},${north},${east});
+  node["leisure"](${south},${west},${north},${east});
+  node["natural"="viewpoint"](${south},${west},${north},${east});
+  node["amenity"~"restaurant|cafe|museum|fast_food"](${south},${west},${north},${east});
+);
+out body;
+`
 }
 
-export const OVERPASS_TAG_GROUPS = [
-  {
-    key: 'tourism',
-    selectors: `
-      node["tourism"](around:\${radius},\${lat},\${lon});
-      way["tourism"](around:\${radius},\${lat},\${lon});
-    `,
-  },
-  {
-    key: 'historic',
-    selectors: `
-      node["historic"](around:\${radius},\${lat},\${lon});
-      way["historic"](around:\${radius},\${lat},\${lon});
-    `,
-  },
-  {
-    key: 'leisure',
-    selectors: `
-      node["leisure"~"park|garden"](around:\${radius},\${lat},\${lon});
-      way["leisure"~"park|garden"](around:\${radius},\${lat},\${lon});
-    `,
-  },
-  {
-    key: 'amenity',
-    selectors: `
-      node["amenity"~"restaurant|cafe|museum|fast_food"](around:\${radius},\${lat},\${lon});
-      way["amenity"~"restaurant|cafe|museum|fast_food"](around:\${radius},\${lat},\${lon});
-    `,
-  },
-] as const
-
-export async function fetchOverpassNearbyPlaces(
-  latitude: number,
-  longitude: number,
-  radiusMeters: number,
+export async function fetchOverpassBboxPlaces(
+  bounds: [[number, number], [number, number]],
 ): Promise<unknown[]> {
-  const results = await Promise.allSettled(
-    OVERPASS_TAG_GROUPS.map(group =>
-      fetchOverpassQuery(
-        buildOverpassAroundQuery(latitude, longitude, radiusMeters, group.selectors),
-      ),
-    ),
-  )
-
-  const elements: unknown[] = []
-  for (const result of results) {
-    if (result.status === 'fulfilled') {
-      elements.push(...result.value.elements)
-    }
-  }
-
-  return elements
+  const [[south, west], [north, east]] = bounds
+  const query = buildOverpassBboxQuery(south, west, north, east)
+  const result = await fetchOverpassQuery(query)
+  return result.elements
 }

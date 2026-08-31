@@ -1,10 +1,12 @@
 import type { NominatimResult, OverpassElement, Place } from '~/types/place'
 import {
-  LARGE_AREA_SEARCH_RADIUS_M,
+  clampBoundsForOverpass,
   mapNominatimPoiToPlace,
   mapOverpassResponse,
+  resolvePlacesSearchArea,
+  viewboxFromBounds,
 } from '~/types/place'
-import { fetchOverpassNearbyPlaces } from '../../utils/overpassClient'
+import { fetchOverpassBboxPlaces } from '../../utils/overpassClient'
 
 const USER_AGENT = 'SehirHafizaApp/1.0 (Nuxt MVP; educational project)'
 const NOMINATIM_INTERVAL_MS = 1100
@@ -14,20 +16,14 @@ const POI_SEARCHES: Record<string, string>[] = [
   { amenity: 'cafe' },
   { amenity: 'museum' },
   { amenity: 'fast_food' },
+  { tourism: 'attraction' },
+  { tourism: 'museum' },
+  { historic: 'monument' },
+  { leisure: 'park' },
 ]
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-function viewboxFromRadius(latitude: number, longitude: number, radiusMeters: number): string {
-  const latDelta = radiusMeters / 111_320
-  const lonDelta = radiusMeters / (111_320 * Math.cos(latitude * (Math.PI / 180)))
-  const south = latitude - latDelta
-  const north = latitude + latDelta
-  const west = longitude - lonDelta
-  const east = longitude + lonDelta
-  return `${west},${north},${east},${south}`
 }
 
 async function searchNominatimPois(
@@ -61,12 +57,8 @@ async function searchNominatimPois(
   return Array.isArray(data) ? data as NominatimResult[] : []
 }
 
-async function fetchFromNominatim(
-  latitude: number,
-  longitude: number,
-  radiusMeters: number,
-): Promise<Place[]> {
-  const viewbox = viewboxFromRadius(latitude, longitude, radiusMeters)
+async function fetchFromNominatim(bounds: [[number, number], [number, number]]): Promise<Place[]> {
+  const viewbox = viewboxFromBounds(bounds)
   const seen = new Set<string>()
   const places: Place[] = []
 
@@ -91,19 +83,24 @@ async function fetchFromNominatim(
   return places
 }
 
+function parseBounds(body: unknown): [[number, number], [number, number]] | undefined {
+  if (!Array.isArray(body) || body.length !== 2) return undefined
+  const [[south, west], [north, east]] = body as [[number, number], [number, number]]
+  if (![south, west, north, east].every(Number.isFinite)) return undefined
+  if (south >= north || west >= east) return undefined
+  return [[south, west], [north, east]]
+}
+
 export default defineEventHandler(async (event) => {
   const body = await readBody<{
     latitude?: number
     longitude?: number
-    radiusMeters?: number
+    bounds?: [[number, number], [number, number]]
   }>(event)
 
   const latitude = Number(body?.latitude)
   const longitude = Number(body?.longitude)
-  const radiusMeters = Math.min(
-    Math.max(Number(body?.radiusMeters) || LARGE_AREA_SEARCH_RADIUS_M, 1500),
-    LARGE_AREA_SEARCH_RADIUS_M,
-  )
+  const rawBounds = parseBounds(body?.bounds)
 
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
     throw createError({
@@ -112,17 +109,24 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  const searchArea = rawBounds
+    ? {
+        mapBounds: rawBounds,
+        bounds: clampBoundsForOverpass(rawBounds, latitude, longitude),
+      }
+    : resolvePlacesSearchArea(latitude, longitude)
+
   let places: Place[] = []
 
   try {
-    const elements = await fetchOverpassNearbyPlaces(latitude, longitude, radiusMeters)
+    const elements = await fetchOverpassBboxPlaces(searchArea.bounds)
     places = mapOverpassResponse(elements as OverpassElement[])
   } catch {
     places = []
   }
 
   if (places.length === 0) {
-    places = await fetchFromNominatim(latitude, longitude, Math.min(radiusMeters, 8000))
+    places = await fetchFromNominatim(searchArea.bounds)
   }
 
   if (places.length === 0) {

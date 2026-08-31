@@ -21,27 +21,24 @@ withDefaults(defineProps<{
     aria-label="Damga"
   >
     <svg class="passport-stamp__svg" viewBox="0 0 100 100" aria-hidden="true">
-      <ellipse
+      <circle
         cx="50"
         cy="50"
-        rx="44"
-        ry="40"
+        r="42"
         fill="none"
         stroke="currentColor"
-        stroke-width="2.4"
-        stroke-dasharray="6 3.5 2 3.5 8 2.5"
-        opacity="0.95"
+        stroke-width="3"
+        stroke-dasharray="8 5"
       />
-      <ellipse
+      <circle
         cx="50"
         cy="50"
-        rx="36"
-        ry="32"
+        r="34"
         fill="none"
         stroke="currentColor"
-        stroke-width="1.1"
-        stroke-dasharray="3 4 1.5 3"
-        opacity="0.55"
+        stroke-width="1.75"
+        stroke-dasharray="5 4"
+        opacity="0.82"
       />
     </svg>
     <span class="passport-stamp__label">{{ label }}</span>
@@ -56,17 +53,19 @@ withDefaults(defineProps<{
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.08rem;
-  width: 4.6rem;
-  height: 4.15rem;
+  gap: 0.1rem;
+  width: 4.75rem;
+  height: 4.75rem;
   color: #C8102E;
   background: transparent;
   transform: rotate(-8deg);
   user-select: none;
-  line-height: 1.05;
+  line-height: 1.1;
   text-align: center;
   flex-shrink: 0;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.12));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
 }
 
 .passport-stamp__svg {
@@ -75,57 +74,58 @@ withDefaults(defineProps<{
   width: 100%;
   height: 100%;
   pointer-events: none;
+  shape-rendering: geometricPrecision;
 }
 
 .passport-stamp__label {
   position: relative;
   z-index: 1;
-  font-family: var(--font-mono);
-  font-size: 0.5625rem;
+  font-family: var(--font-display);
+  font-size: 0.625rem;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .passport-stamp__date {
   position: relative;
   z-index: 1;
-  font-family: var(--font-mono);
-  font-size: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 0.5625rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  opacity: 0.95;
+  letter-spacing: 0.04em;
 }
 
 .passport-stamp--sm {
-  width: 2.75rem;
-  height: 2.5rem;
+  width: 3.5rem;
+  height: 3.5rem;
 }
 
 .passport-stamp--sm .passport-stamp__label {
-  font-size: 0.375rem;
+  font-size: 0.5625rem;
   letter-spacing: 0.1em;
 }
 
 .passport-stamp--sm .passport-stamp__date {
-  font-size: 0.3125rem;
+  font-size: 0.5rem;
 }
 
 .passport-stamp--md {
-  width: 4.6rem;
-  height: 4.15rem;
+  width: 4.75rem;
+  height: 4.75rem;
 }
 
 .passport-stamp--lg {
-  width: 5.5rem;
-  height: 5rem;
+  width: 5.75rem;
+  height: 5.75rem;
 }
 
 .passport-stamp--lg .passport-stamp__label {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
 }
 
 .passport-stamp--lg .passport-stamp__date {
-  font-size: 0.55rem;
+  font-size: 0.625rem;
 }
 
 .passport-stamp--planned {

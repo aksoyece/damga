@@ -32,11 +32,14 @@ export interface NominatimResult {
   boundingbox?: [string, string, string, string]
 }
 
-/** Seçilen noktanın etrafında mekan aranırken kullanılan sabit yarıçap (metre) */
-export const NEARBY_SEARCH_RADIUS_M = 12_000
+/** Overpass bbox clamp: bu eşiği aşan alanlar merkeze göre küçültülür */
+export const OVERPASS_BBOX_CLAMP_THRESHOLD_KM = 40
 
-/** Geniş il/bölge aramalarında merkez + bu yarıçap (metre) */
-export const LARGE_AREA_SEARCH_RADIUS_M = 12_000
+/** Clamp sonrası hedef maksimum kenar uzunluğu (km) */
+export const OVERPASS_BBOX_CLAMP_MAX_SPAN_KM = 20
+
+/** Bbox yoksa kullanılan yedek yarıçap (metre) */
+export const NEARBY_FALLBACK_RADIUS_M = 8_000
 
 /** Overpass sonuç limitleri */
 export const OVERPASS_AROUND_RESULT_LIMIT = 200
@@ -111,7 +114,7 @@ export function splitBoundsIntoGrid(
 export function boundsFromRadius(
   latitude: number,
   longitude: number,
-  radiusMeters = NEARBY_SEARCH_RADIUS_M,
+  radiusMeters = NEARBY_FALLBACK_RADIUS_M,
 ): [[number, number], [number, number]] {
   const latDelta = radiusMeters / 111_320
   const lonDelta = radiusMeters / (111_320 * Math.cos(latitude * (Math.PI / 180)))
@@ -124,37 +127,26 @@ export function boundsFromRadius(
 
 export interface PlacesSearchArea {
   mapBounds: [[number, number], [number, number]]
-  bounds?: [[number, number], [number, number]]
-  radiusMeters: number
+  /** Overpass sorgusuna gidecek (clamp uygulanmış) bbox */
+  bounds: [[number, number], [number, number]]
 }
 
 /**
- * Overpass araması için alan çözümü.
- * Çok geniş bbox (il düzeyi) → grid yerine merkez + LARGE_AREA_SEARCH_RADIUS_M.
+ * Nominatim boundingbox → Overpass tarama alanı.
+ * Bbox yoksa merkez etrafında yedek yarıçap kullanılır.
  */
 export function resolvePlacesSearchArea(
   latitude: number,
   longitude: number,
   bounds?: [[number, number], [number, number]],
 ): PlacesSearchArea {
-  if (bounds && shouldUseGridForBounds(bounds)) {
-    return {
-      mapBounds: boundsFromRadius(latitude, longitude, LARGE_AREA_SEARCH_RADIUS_M),
-      radiusMeters: LARGE_AREA_SEARCH_RADIUS_M,
-    }
-  }
-
-  if (bounds) {
-    return {
-      mapBounds: bounds,
-      bounds,
-      radiusMeters: NEARBY_SEARCH_RADIUS_M,
-    }
-  }
+  const searchBounds = bounds
+    ? clampBoundsForOverpass(bounds, latitude, longitude)
+    : boundsFromRadius(latitude, longitude, NEARBY_FALLBACK_RADIUS_M)
 
   return {
-    mapBounds: boundsFromRadius(latitude, longitude, NEARBY_SEARCH_RADIUS_M),
-    radiusMeters: NEARBY_SEARCH_RADIUS_M,
+    mapBounds: searchBounds,
+    bounds: searchBounds,
   }
 }
 
@@ -224,6 +216,7 @@ function resolveCategoryFromTags(tags: Record<string, string>): string {
   if (tags.amenity) return CATEGORY_MAP[tags.amenity] ?? 'other'
   if (tags.leisure) return CATEGORY_MAP[tags.leisure] ?? 'park'
   if (tags.historic) return CATEGORY_MAP[tags.historic] ?? 'monument'
+  if (tags.natural) return CATEGORY_MAP[tags.natural] ?? 'attraction'
   return 'other'
 }
 
@@ -237,7 +230,7 @@ function buildAddressFromTags(tags: Record<string, string>): string | undefined 
   return parts.length > 0 ? parts.join(' ') : undefined
 }
 
-/** Nominatim boundingbox → Leaflet sınırları ([[güney, batı], [kuzey, doğu]]) */
+/** Nominatim boundingbox → Leaflet [[güney, batı], [kuzey, doğu]] */
 export function parseNominatimBounds(
   boundingbox?: [string, string, string, string],
 ): [[number, number], [number, number]] | undefined {
@@ -247,6 +240,26 @@ export function parseNominatimBounds(
   if ([minLat, maxLat, minLon, maxLon].some(Number.isNaN)) return undefined
 
   return [[minLat, minLon], [maxLat, maxLon]]
+}
+
+/**
+ * Geniş şehir bbox'larını Overpass performansı için merkeze göre sınırlar.
+ * max(latKm, lonKm) > thresholdKm ise maxSpanKm kutu oluşturulur.
+ */
+export function clampBoundsForOverpass(
+  bounds: [[number, number], [number, number]],
+  centerLat: number,
+  centerLon: number,
+  thresholdKm = OVERPASS_BBOX_CLAMP_THRESHOLD_KM,
+  maxSpanKm = OVERPASS_BBOX_CLAMP_MAX_SPAN_KM,
+): [[number, number], [number, number]] {
+  const { latKm, lonKm } = boundsSpanKm(bounds)
+  if (Math.max(latKm, lonKm) <= thresholdKm) {
+    return bounds
+  }
+
+  const radiusM = (maxSpanKm / 2) * 1000
+  return boundsFromRadius(centerLat, centerLon, radiusM)
 }
 
 /** Nominatim POI sonucunu Place modeline dönüştürür */
@@ -300,9 +313,14 @@ function nominatimViewboxFromRadius(
 export function buildNominatimPoiViewbox(
   latitude: number,
   longitude: number,
-  radiusMeters = NEARBY_SEARCH_RADIUS_M,
+  radiusMeters = NEARBY_FALLBACK_RADIUS_M,
 ): string {
   return nominatimViewboxFromRadius(latitude, longitude, radiusMeters)
+}
+
+export function viewboxFromBounds(bounds: [[number, number], [number, number]]): string {
+  const [[south, west], [north, east]] = bounds
+  return `${west},${north},${east},${south}`
 }
 
 /** Nominatim ham sonucunu arama listesi modeline dönüştürür */

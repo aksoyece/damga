@@ -32,7 +32,7 @@ const visiblePlacesCount = ref(PLACES_PAGE_SIZE)
 const lastNearbySearch = ref<{
   latitude: number
   longitude: number
-  options: { bounds?: [[number, number], [number, number]]; radiusMeters?: number }
+  options: { bounds?: [[number, number], [number, number]] }
 } | null>(null)
 
 const savedIds = computed(() => new Set(savedPlaces.value.map(place => place.id)))
@@ -161,7 +161,6 @@ async function handleSelectResult(result: SearchResult) {
   visiblePlacesCount.value = PLACES_PAGE_SIZE
   const fetchOptions = {
     bounds: searchArea.bounds,
-    radiusMeters: searchArea.radiusMeters,
   }
   lastNearbySearch.value = {
     latitude: result.latitude,
