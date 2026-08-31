@@ -12,7 +12,8 @@ export default defineEventHandler(async (event) => {
     q,
     format: 'json',
     addressdetails: '1',
-    limit: '10',
+    limit: '15',
+    dedupe: '1',
     'accept-language': 'tr',
     countrycodes: 'tr',
   })

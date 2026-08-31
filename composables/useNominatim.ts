@@ -1,5 +1,5 @@
 import type { NominatimResult, SearchResult } from '~/types/place'
-import { boundsSpanKm, mapNominatimToSearchResult, parseNominatimBounds } from '~/types/place'
+import { mapNominatimToSearchResult } from '~/types/place'
 let lastRequestTime = 0
 const MIN_REQUEST_INTERVAL = 1100
 
@@ -7,16 +7,19 @@ function rankSearchResult(result: NominatimResult): number {
   let score = result.importance ?? 0
 
   if (result.class === 'place') {
-    if (result.type === 'city') score += 2
-    else if (result.type === 'town') score += 1.5
+    if (result.type === 'city') score += 3
+    else if (result.type === 'town') score += 2
     else if (result.type === 'village') score += 1
   }
 
   if (result.class === 'boundary' && result.type === 'administrative') {
-    score -= 3
+    score -= 2
+    if (result.addresstype === 'province') score -= 4
   }
-  if (result.addresstype === 'city') score += 1.5
-  if (result.addresstype === 'county' || result.addresstype === 'municipality') score += 1
+
+  if (result.addresstype === 'city') score += 2
+  if (result.addresstype === 'town' || result.addresstype === 'municipality') score += 1.5
+  if (result.addresstype === 'county') score += 1
 
   return score
 }
@@ -31,40 +34,14 @@ const EXCLUDED_ADDRESS_TYPES = new Set([
   'continent',
 ])
 
-const LOCAL_ADDRESS_TYPES = new Set([
-  'city',
-  'town',
-  'village',
-  'municipality',
-  'suburb',
-  'neighbourhood',
-  'district',
-  'hamlet',
-  'county',
-])
-
 function isUsefulSearchResult(result: NominatimResult): boolean {
-  if (result.addresstype && EXCLUDED_ADDRESS_TYPES.has(result.addresstype)) {
-    return false
-  }
-
-  // İl/düzeyi dev idari sınır (ör. "Ankara, İç Anadolu") — merkez kayar, tarama dağılır
-  if (result.class === 'boundary' && result.type === 'administrative') {
-    if (result.addresstype && LOCAL_ADDRESS_TYPES.has(result.addresstype)) {
-      return true
-    }
-
-    const bounds = parseNominatimBounds(result.boundingbox)
-    if (bounds) {
-      const { latKm, lonKm } = boundsSpanKm(bounds)
-      if (Math.max(latKm, lonKm) > 55) return false
-    }
-  }
-
-  return true
+  return !(result.addresstype && EXCLUDED_ADDRESS_TYPES.has(result.addresstype))
 }
+
 function prepareSearchResults(results: NominatimResult[]): NominatimResult[] {
-  return sortSearchResults(results.filter(isUsefulSearchResult))
+  const filtered = results.filter(isUsefulSearchResult)
+  const pool = filtered.length > 0 ? filtered : results
+  return sortSearchResults(pool)
 }
 
 async function waitForRateLimit() {
