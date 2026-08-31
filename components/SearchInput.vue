@@ -123,6 +123,17 @@ onUnmounted(() => {
   background: var(--bg-card);
 }
 
+/* Tarayıcı varsayılan arama çarpısı — özel temizle butonu kullanılıyor */
+.search-input__field input[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.search-input__field input[type='search']::-ms-clear {
+  display: none;
+}
+
 .search-input__clear {
   position: absolute;
   right: 0.625rem;
