@@ -63,10 +63,12 @@ body,
 body {
   background-color: var(--bg);
   background-image: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-/* Statik arayüz metinleri — tıklanınca metin imleci / seçim yok (site geneli) */
-.layout :where(
+/* Statik arayüz metinleri — metin imleci / seçim yok (site geneli) */
+:is(.layout, #__nuxt) :where(
   h1, h2, h3, h4, h5, h6,
   p, span, small, strong, em, dt, dd, li
 ) {
@@ -75,17 +77,25 @@ body {
   cursor: default;
 }
 
-.layout :where(input, textarea, select) {
+input,
+textarea,
+select,
+[contenteditable='true'] {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+:is(.layout, #__nuxt) :where(input, textarea, select) {
   user-select: text;
   -webkit-user-select: text;
   cursor: text;
 }
 
-.layout :where(a, button, .btn, [role='button'], label[for], .filter-tabs__btn) {
+:is(.layout, #__nuxt) :where(a, button, .btn, [role='button'], label[for], .filter-tabs__btn) {
   cursor: pointer;
 }
 
-.layout :where(input[type='search'], input[type='text'], input[type='date'], textarea) {
+:is(.layout, #__nuxt) :where(input[type='search'], input[type='text'], input[type='date'], textarea) {
   cursor: text;
 }
 
