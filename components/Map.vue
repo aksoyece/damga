@@ -313,7 +313,7 @@ onUnmounted(() => {
         class="map-wrapper__empty"
       >
         <p>Henüz pin yok</p>
-        <span>Sol panelden şehir arayın veya mekan kaydedin</span>
+        <span>Yukarıdan şehir arayın veya mekan kaydedin</span>
       </div>
 
       <div ref="mapContainer" class="map-wrapper__canvas" />
