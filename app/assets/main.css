@@ -65,16 +65,7 @@ body {
   background-image: none;
   user-select: none;
   -webkit-user-select: none;
-}
-
-/* Statik arayüz metinleri — metin imleci / seçim yok (site geneli) */
-:is(.layout, #__nuxt) :where(
-  h1, h2, h3, h4, h5, h6,
-  p, span, small, strong, em, dt, dd, li
-) {
-  user-select: none;
-  -webkit-user-select: none;
-  cursor: default;
+  caret-color: transparent;
 }
 
 input,
@@ -83,8 +74,22 @@ select,
 [contenteditable='true'] {
   user-select: text;
   -webkit-user-select: text;
+  caret-color: auto;
 }
 
+:is(.layout, #__nuxt) :where(
+  h1, h2, h3, h4, h5, h6,
+  p, span, small, strong, em, dt, dd, li,
+  blockquote, figcaption, label
+) {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-modify: read-only;
+  cursor: default;
+  caret-color: transparent;
+}
+
+/* Statik arayüz metinleri — metin imleci / seçim yok (site geneli) */
 :is(.layout, #__nuxt) :where(input, textarea, select) {
   user-select: text;
   -webkit-user-select: text;
