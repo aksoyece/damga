@@ -205,6 +205,14 @@ select {
   align-items: center;
   gap: 0.75rem;
   color: var(--text);
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: opacity var(--transition);
+}
+
+.layout__brand:hover {
+  opacity: 0.85;
 }
 
 .layout__brand-mark {

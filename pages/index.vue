@@ -183,6 +183,14 @@ const landingMapBounds = computed<[[number, number], [number, number]] | null>((
   ]
 })
 
+const homeReset = useState('home-reset', () => 0)
+const searchInputKey = ref(0)
+
+watch(homeReset, () => {
+  handleClearSearch()
+  searchInputKey.value += 1
+})
+
 onMounted(() => {
   placesStore.initialize()
 })
@@ -283,6 +291,7 @@ function formatStampDate(iso?: string): string | undefined {
           Örneğin Bursa, Kadıköy veya tam bir adres yazın — ardından mekanları keşfedip arşivinize ekleyin.
         </p>
         <SearchInput
+          :key="searchInputKey"
           :class="searchInputClass"
           :autofocus="!hasSearched"
           :loading="searchLoading"

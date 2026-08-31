@@ -1,8 +1,20 @@
+<script setup lang="ts">
+const route = useRoute()
+const homeReset = useState('home-reset', () => 0)
+
+function goHome(event: MouseEvent) {
+  homeReset.value += 1
+  if (route.path === '/') {
+    event.preventDefault()
+  }
+}
+</script>
+
 <template>
   <div class="layout">
     <header class="layout__header">
       <div class="layout__inner">
-        <NuxtLink to="/" class="layout__brand">
+        <NuxtLink to="/" class="layout__brand" aria-label="Ana ekrana dön" @click="goHome">
           <span class="layout__brand-mark" aria-hidden="true">
             <Logo :size="40" />
           </span>
