@@ -149,6 +149,18 @@ const mapPlaces = computed(() => {
   return [...saved, ...discovered.slice(0, Math.max(0, room))]
 })
 
+const landingMapBounds = computed<[[number, number], [number, number]] | null>(() => {
+  if (hasSearched.value || savedPlaces.value.length < 2) return null
+
+  const lats = savedPlaces.value.map(place => place.latitude)
+  const lons = savedPlaces.value.map(place => place.longitude)
+
+  return [
+    [Math.min(...lats), Math.min(...lons)],
+    [Math.max(...lats), Math.max(...lons)],
+  ]
+})
+
 onMounted(() => {
   placesStore.initialize()
 })
@@ -259,6 +271,36 @@ function formatStampDate(iso?: string): string | undefined {
           @select="handleSelectResult"
           @clear="handleClearSearch"
         />
+      </div>
+    </section>
+
+    <section v-if="!hasSearched" class="journal-map" aria-label="Harita">
+      <div class="journal-map__inner">
+        <div class="journal-map__frame discover-map">
+          <ClientOnly>
+            <Map
+              :center="mapCenter"
+              :zoom="mapZoom"
+              :fit-bounds="landingMapBounds"
+              :places="mapPlaces"
+              :places-total="mapPlacesTotal"
+              :saved-lookup="savedLookup"
+              compact
+              @select-place="(place) => openPlace(place.id)"
+            />
+            <template #fallback>
+              <div class="panel panel__hint">Konum referansı yükleniyor…</div>
+            </template>
+          </ClientOnly>
+        </div>
+        <p class="journal-map__hint">
+          <template v-if="savedPlaces.length > 0">
+            Arşivinizdeki {{ savedPlaces.length }} mekan haritada — bir pini seçerek günlük sayfasına gidebilirsiniz.
+          </template>
+          <template v-else>
+            Bir şehir veya adres arayın; keşfettiğiniz mekanlar bu haritada görünecek.
+          </template>
+        </p>
       </div>
     </section>
 
@@ -614,7 +656,9 @@ function formatStampDate(iso?: string): string | undefined {
 }
 
 .discover-map :deep(.map-wrapper__frame),
-.discover-map :deep(.map-wrapper__canvas) {
+.discover-map :deep(.map-wrapper__canvas),
+.journal-map__frame :deep(.map-wrapper__frame),
+.journal-map__frame :deep(.map-wrapper__canvas) {
   height: 320px;
   min-height: 320px;
   max-height: 320px;
@@ -622,7 +666,9 @@ function formatStampDate(iso?: string): string | undefined {
 
 @media (max-width: 480px) {
   .discover-map :deep(.map-wrapper__frame),
-  .discover-map :deep(.map-wrapper__canvas) {
+  .discover-map :deep(.map-wrapper__canvas),
+  .journal-map__frame :deep(.map-wrapper__frame),
+  .journal-map__frame :deep(.map-wrapper__canvas) {
     height: 280px;
     min-height: 280px;
     max-height: 280px;
@@ -631,7 +677,9 @@ function formatStampDate(iso?: string): string | undefined {
 
 @media (min-width: 769px) and (max-width: 1024px) {
   .discover-map :deep(.map-wrapper__frame),
-  .discover-map :deep(.map-wrapper__canvas) {
+  .discover-map :deep(.map-wrapper__canvas),
+  .journal-map__frame :deep(.map-wrapper__frame),
+  .journal-map__frame :deep(.map-wrapper__canvas) {
     height: 400px;
     min-height: 400px;
     max-height: 400px;
@@ -640,7 +688,9 @@ function formatStampDate(iso?: string): string | undefined {
 
 @media (min-width: 1025px) {
   .discover-map :deep(.map-wrapper__frame),
-  .discover-map :deep(.map-wrapper__canvas) {
+  .discover-map :deep(.map-wrapper__canvas),
+  .journal-map__frame :deep(.map-wrapper__frame),
+  .journal-map__frame :deep(.map-wrapper__canvas) {
     height: 24rem;
     min-height: 24rem;
     max-height: 24rem;
