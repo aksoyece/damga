@@ -29,7 +29,13 @@
           Konum verileri OpenStreetMap · Listeniz, notlarınız ve puanlarınız yalnızca tarayıcınızda saklanır
         </p>
         <p class="layout__footer-credit">
-          © 2026 Damga · Designed &amp; developed by Ece Aksoy
+          © 2026 Damga · Designed &amp; developed by
+          <a
+            href="https://www.linkedin.com/in/eceaksoy16"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="layout__footer-link"
+          >Ece Aksoy</a>
         </p>
       </div>
     </footer>

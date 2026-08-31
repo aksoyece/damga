@@ -282,7 +282,7 @@ select {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.3rem;
 }
 
 .layout__footer-note,
@@ -295,6 +295,17 @@ select {
   letter-spacing: 0.02em;
   font-size: 0.6875rem;
   color: var(--text-muted);
+}
+
+.layout__footer-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  transition: color var(--transition);
+}
+
+.layout__footer-link:hover {
+  color: var(--primary);
 }
 
 /* ── Journal page (search under site header) ── */
