@@ -38,6 +38,17 @@ function submitNote() {
   emit('updateNote', noteDraft.value)
 }
 
+const mapPlaces = computed(() => [props.place])
+
+const savedLookup = computed(() =>
+  props.savedPlace ? { [props.place.id]: props.savedPlace } : {},
+)
+
+const openStreetMapUrl = computed(() => {
+  const { latitude, longitude } = props.place
+  return `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=16/${latitude}/${longitude}`
+})
+
 function formatDate(iso?: string): string | undefined {
   if (!iso) return undefined
   const [y, m, d] = iso.split('-')
@@ -143,27 +154,39 @@ function formatDate(iso?: string): string | undefined {
           class="place-details__toggle"
           @click="showLocationInfo = !showLocationInfo"
         >
-          {{ showLocationInfo ? '▾ Konum bilgisini gizle' : '▸ Konum bilgisi (harita verisi)' }}
+          {{ showLocationInfo ? '▾ Haritayı gizle' : '▸ Konumu haritada göster' }}
         </button>
 
         <div v-if="showLocationInfo" class="place-details__location">
-          <p v-if="loading" class="place-details__hint">Konum verisi yükleniyor…</p>
+          <p v-if="loading" class="place-details__hint">Konum yükleniyor…</p>
           <p v-else-if="apiError" class="place-details__hint place-details__hint--error">{{ apiError }}</p>
 
-          <dl class="place-details__list">
-            <div>
-              <dt>Enlem</dt>
-              <dd>{{ place.latitude.toFixed(5) }}</dd>
-            </div>
-            <div>
-              <dt>Boylam</dt>
-              <dd>{{ place.longitude.toFixed(5) }}</dd>
-            </div>
-            <div v-if="place.address">
-              <dt>Adres</dt>
-              <dd>{{ place.address }}</dd>
-            </div>
-          </dl>
+          <ClientOnly>
+            <Map
+              :center="[place.latitude, place.longitude]"
+              :zoom="16"
+              :places="mapPlaces"
+              :saved-lookup="savedLookup"
+              :selected-place-id="place.id"
+              minimal
+            />
+            <template #fallback>
+              <p class="place-details__hint">Harita yükleniyor…</p>
+            </template>
+          </ClientOnly>
+
+          <p v-if="place.address" class="place-details__location-address">
+            {{ place.address }}
+          </p>
+
+          <a
+            class="place-details__osm-link"
+            :href="openStreetMapUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            OpenStreetMap'te aç →
+          </a>
         </div>
       </div>
     </div>
@@ -365,31 +388,24 @@ function formatDate(iso?: string): string | undefined {
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px dashed var(--border-light);
+  display: grid;
+  gap: 0.75rem;
 }
 
-.place-details__list {
-  display: grid;
-  gap: 0.625rem;
+.place-details__location-address {
   margin: 0;
-}
-
-.place-details__list div {
-  display: grid;
-  grid-template-columns: 5rem 1fr;
-  gap: 0.5rem;
+  color: var(--text-muted);
   font-size: 0.8125rem;
+  line-height: 1.55;
 }
 
-.place-details__list dt {
-  font-family: var(--font-mono);
-  font-size: 0.5625rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-subtle);
+.place-details__osm-link {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--primary);
 }
 
-.place-details__list dd {
-  margin: 0;
+.place-details__osm-link:hover {
+  text-decoration: underline;
 }
 </style>

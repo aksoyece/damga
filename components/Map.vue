@@ -13,8 +13,11 @@ const props = withDefaults(defineProps<{
   selectedPlaceId?: string | null
   error?: string | null
   compact?: boolean
+  /** Detay sayfası: başlıksız, küçük gömülü harita */
+  minimal?: boolean
 }>(), {
   compact: false,
+  minimal: false,
 })
 
 const emit = defineEmits<{
@@ -288,9 +291,12 @@ onUnmounted(() => {
 <template>
   <div
     class="map-wrapper"
-    :class="{ 'map-wrapper--compact': compact }"
+    :class="{
+      'map-wrapper--compact': compact,
+      'map-wrapper--minimal': minimal,
+    }"
   >
-    <div class="map-wrapper__header">
+    <div v-if="!minimal" class="map-wrapper__header">
       <div>
         <span class="map-wrapper__title">Konum referansı</span>
         <p class="map-wrapper__subtitle">
@@ -318,7 +324,7 @@ onUnmounted(() => {
       </p>
 
       <div
-        v-if="isReady && !places?.length && !error && !mapError"
+        v-if="isReady && !places?.length && !error && !mapError && !minimal"
         class="map-wrapper__empty"
       >
         <p>Henüz pin yok</p>
@@ -397,6 +403,16 @@ onUnmounted(() => {
 .map-wrapper--compact .map-wrapper__frame,
 .map-wrapper--compact .map-wrapper__canvas {
   min-height: 18rem;
+}
+
+.map-wrapper--minimal {
+  border-radius: var(--radius);
+  box-shadow: none;
+}
+
+.map-wrapper--minimal .map-wrapper__frame,
+.map-wrapper--minimal .map-wrapper__canvas {
+  min-height: 12rem;
 }
 
 .map-wrapper__canvas {
