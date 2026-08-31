@@ -400,6 +400,36 @@ select {
   margin-bottom: 2.5rem;
 }
 
+@media (max-width: 959px) {
+  .discover-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .discover-layout__map,
+  .discover-layout__sidebar {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .discover-layout .sidebar {
+    overflow: visible;
+  }
+
+  .discover-places-scroll {
+    overflow: visible;
+    min-height: 0;
+    max-height: none;
+    padding-right: 0;
+  }
+
+  .discover-places-scroll .stack--places {
+    padding-bottom: 0;
+  }
+}
+
 @media (min-width: 960px) {
   .discover-layout {
     grid-template-columns: minmax(0, 1.15fr) minmax(300px, 380px);
@@ -522,20 +552,11 @@ select {
   overflow: visible;
 }
 
-@media (min-width: 960px) {
-  .sidebar {
-    position: sticky;
-    top: calc(var(--header-height) + 1.25rem);
-    /* overflow/max-height yok — hover scale kesilmesin */
-  }
-}
-
 .map-section {
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
-  position: sticky;
-  top: calc(var(--header-height) + 1.25rem);
+  position: static;
 }
 
 /* ── Panels (open / frameless) ── */

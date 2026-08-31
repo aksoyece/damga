@@ -600,9 +600,18 @@ function formatStampDate(iso?: string): string | undefined {
 
 .discover-map :deep(.map-wrapper__frame),
 .discover-map :deep(.map-wrapper__canvas) {
-  min-height: 22rem;
-  height: 22rem;
-  max-height: 22rem;
+  min-height: 16rem;
+  height: 16rem;
+  max-height: 16rem;
+}
+
+@media (min-width: 640px) and (max-width: 959px) {
+  .discover-map :deep(.map-wrapper__frame),
+  .discover-map :deep(.map-wrapper__canvas) {
+    min-height: 18rem;
+    height: 18rem;
+    max-height: 18rem;
+  }
 }
 
 @media (min-width: 960px) {
