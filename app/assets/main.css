@@ -280,6 +280,21 @@ select {
 .layout__footer-inner {
   width: min(1180px, calc(100% - 2rem));
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.layout__footer-note,
+.layout__footer-credit {
+  margin: 0;
+}
+
+.layout__footer-credit {
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
 }
 
 /* ── Journal page (search under site header) ── */

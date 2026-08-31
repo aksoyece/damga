@@ -25,7 +25,12 @@
 
     <footer class="layout__footer">
       <div class="layout__footer-inner">
-        Konum verileri OpenStreetMap · Listeniz, notlarınız ve puanlarınız yalnızca tarayıcınızda saklanır
+        <p class="layout__footer-note">
+          Konum verileri OpenStreetMap · Listeniz, notlarınız ve puanlarınız yalnızca tarayıcınızda saklanır
+        </p>
+        <p class="layout__footer-credit">
+          © 2026 Damga · Designed &amp; developed by Ece Aksoy
+        </p>
       </div>
     </footer>
   </div>
