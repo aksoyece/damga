@@ -914,8 +914,9 @@ select {
 /* ── Location chip ── */
 .location-chip {
   display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
   padding: 0.625rem 0.875rem;
   margin-bottom: 1rem;
   border: 1.5px solid var(--text-muted);
@@ -924,6 +925,25 @@ select {
   font-size: 0.8125rem;
   line-height: 1.5;
   color: var(--text-muted);
+}
+
+.places-found-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border: 1.5px solid var(--primary);
+  border-radius: 999px;
+  background: var(--primary-soft);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.places-found-pill--head {
+  flex-shrink: 0;
 }
 
 .location-chip strong {

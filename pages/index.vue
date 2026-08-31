@@ -13,7 +13,6 @@ const {
   places,
   loading: placesLoading,
   error: placesError,
-  gridProgress,
   fetchNearbyPlaces,
   clearPlaces,
 } = usePlaces()
@@ -147,6 +146,29 @@ const mapPlaces = computed(() => {
   const room = MAX_MAP_PINS - saved.length
 
   return [...saved, ...discovered.slice(0, Math.max(0, room))]
+})
+
+const placesFoundSummary = computed(() => {
+  const total = places.value.length
+  const newOnes = discoveredPlaces.value.length
+  const shown = filteredPlaces.value.length
+
+  if (placesLoading.value) {
+    return total > 0 ? `${total} mekan bulundu…` : null
+  }
+
+  if (total === 0 || placesError.value) return null
+
+  if (selectedCategory.value !== 'all') {
+    const label = getCategoryLabel(selectedCategory.value)
+    return `${shown} mekan · ${label}`
+  }
+
+  if (newOnes < total) {
+    return `${total} mekan bulundu · ${newOnes} yeni`
+  }
+
+  return `${total} mekan bulundu`
 })
 
 const landingMapBounds = computed<[[number, number], [number, number]] | null>(() => {
@@ -390,6 +412,8 @@ function formatStampDate(iso?: string): string | undefined {
     <div v-if="hasSearched" class="discover-layout">
       <div class="discover-layout__region location-chip">
         <span><strong>Bölge:</strong> {{ searchedLocation }}</span>
+        <span v-if="placesFoundSummary" class="places-found-pill">{{ placesFoundSummary }}</span>
+        <span v-else-if="placesLoading" class="loading-pill">Mekanlar taranıyor</span>
       </div>
 
       <div class="discover-layout__filters">
@@ -486,9 +510,14 @@ function formatStampDate(iso?: string): string | undefined {
         <div class="panel__head">
           <div>
             <p class="panel__title">Keşfedilen mekanlar</p>
-            <p class="panel__subtitle">Arşive eklenecek adaylar</p>
+            <p class="panel__subtitle">
+              <template v-if="placesFoundSummary">{{ placesFoundSummary }}</template>
+              <template v-else-if="placesLoading">Mekanlar getiriliyor…</template>
+              <template v-else>Arşive eklenecek adaylar</template>
+            </p>
           </div>
-          <span v-if="placesLoading" class="loading-pill">Yükleniyor</span>
+          <span v-if="placesLoading && !placesFoundSummary" class="loading-pill">Yükleniyor</span>
+          <span v-else-if="placesFoundSummary" class="places-found-pill places-found-pill--head">{{ placesFoundSummary }}</span>
         </div>
 
         <div v-if="placesError" class="alert alert--error places-error">
@@ -506,13 +535,8 @@ function formatStampDate(iso?: string): string | undefined {
 
         <div class="places-list">
           <div v-if="placesLoading" class="panel__hint">
-            <template v-if="gridProgress">
-              {{ gridProgress.current }}/{{ gridProgress.total }} bölge taranıyor…
-              <span v-if="places.length"> ({{ places.length }} mekan bulundu)</span>
-            </template>
-            <template v-else>
-              Mekanlar getiriliyor…
-            </template>
+            Mekanlar getiriliyor…
+            <span v-if="places.length"> ({{ places.length }} bulundu)</span>
           </div>
 
           <div v-if="!placesLoading && places.length === 0 && !placesError" class="panel__hint">
