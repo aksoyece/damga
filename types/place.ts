@@ -22,6 +22,9 @@ export interface NominatimResult {
   display_name: string
   lat: string
   lon: string
+  name?: string
+  osm_type?: string
+  osm_id?: number
   type?: string
   class?: string
   importance?: number
@@ -244,6 +247,62 @@ export function parseNominatimBounds(
   if ([minLat, maxLat, minLon, maxLon].some(Number.isNaN)) return undefined
 
   return [[minLat, minLon], [maxLat, maxLon]]
+}
+
+/** Nominatim POI sonucunu Place modeline dönüştürür */
+export function mapNominatimPoiToPlace(result: NominatimResult): Place | null {
+  if (!result.osm_type || result.osm_id == null) return null
+
+  const latitude = parseFloat(result.lat)
+  const longitude = parseFloat(result.lon)
+  if (Number.isNaN(latitude) || Number.isNaN(longitude)) return null
+
+  const name = result.name?.trim()
+    ?? result.display_name.split(',')[0]?.trim()
+  if (!name) return null
+
+  return {
+    id: `${result.osm_type}-${result.osm_id}`,
+    name,
+    category: resolveCategoryFromNominatim(result),
+    latitude,
+    longitude,
+    address: result.display_name,
+  }
+}
+
+function resolveCategoryFromNominatim(result: NominatimResult): string {
+  if (result.class === 'amenity' && result.type) {
+    return CATEGORY_MAP[result.type] ?? 'other'
+  }
+  if (result.class === 'tourism' && result.type) {
+    return CATEGORY_MAP[result.type] ?? 'attraction'
+  }
+  if (result.class === 'leisure' && result.type) {
+    return CATEGORY_MAP[result.type] ?? 'park'
+  }
+  if (result.class === 'historic') {
+    return 'monument'
+  }
+  return 'other'
+}
+
+function nominatimViewboxFromRadius(
+  latitude: number,
+  longitude: number,
+  radiusMeters: number,
+): string {
+  const [[south, west], [north, east]] = boundsFromRadius(latitude, longitude, radiusMeters)
+  return `${west},${north},${east},${south}`
+}
+
+/** Nominatim ile yakın POI araması için viewbox string */
+export function buildNominatimPoiViewbox(
+  latitude: number,
+  longitude: number,
+  radiusMeters = NEARBY_SEARCH_RADIUS_M,
+): string {
+  return nominatimViewboxFromRadius(latitude, longitude, radiusMeters)
 }
 
 /** Nominatim ham sonucunu arama listesi modeline dönüştürür */

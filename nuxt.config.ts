@@ -25,6 +25,9 @@ export default defineNuxtConfig({
           'api/overpass': {
             maxDuration: 30,
           },
+          'api/places/nearby': {
+            maxDuration: 30,
+          },
         },
       },
     },

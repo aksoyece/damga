@@ -1,48 +1,7 @@
-import type { OverpassResponse, Place } from '~/types/place'
-import {
-  NEARBY_SEARCH_RADIUS_M,
-  OVERPASS_AROUND_RESULT_LIMIT,
-  mapOverpassResponse,
-} from '~/types/place'
+import type { OverpassElement, Place } from '~/types/place'
+import { NEARBY_SEARCH_RADIUS_M, mapOverpassResponse } from '~/types/place'
 
-/** Sunucu paralel uç nokta denemesi + tek sorgu için yeterli süre */
-const OVERPASS_FETCH_TIMEOUT_MS = 22_000
-
-function buildPoiSelectorsAround(latitude: number, longitude: number, radiusMeters: number): string {
-  return `
-      nwr["tourism"](around:${radiusMeters},${latitude},${longitude});
-      nwr["amenity"~"cafe|restaurant|museum|fast_food"](around:${radiusMeters},${latitude},${longitude});
-      nwr["leisure"~"park|garden"](around:${radiusMeters},${latitude},${longitude});
-      nwr["historic"](around:${radiusMeters},${latitude},${longitude});
-  `
-}
-
-function buildNearbyQueryAround(
-  latitude: number,
-  longitude: number,
-  radiusMeters: number,
-  resultLimit = OVERPASS_AROUND_RESULT_LIMIT,
-  timeoutSec = 15,
-): string {
-  return `
-    [out:json][timeout:${timeoutSec}];
-    (
-      ${buildPoiSelectorsAround(latitude, longitude, radiusMeters)}
-    );
-    out center ${resultLimit};
-  `
-}
-
-function logOverpassStats(
-  mode: string,
-  rawCount: number,
-  mappedCount: number,
-  extra?: Record<string, number | string>,
-) {
-  if (!import.meta.dev) return
-
-  console.info(`[Overpass] ${mode}: ham=${rawCount}, haritaya=${mappedCount}`, extra ?? '')
-}
+const NEARBY_FETCH_TIMEOUT_MS = 30_000
 
 function normalizeError(err: unknown, fallback: string): string {
   if (err && typeof err === 'object' && 'data' in err) {
@@ -58,49 +17,10 @@ function normalizeError(err: unknown, fallback: string): string {
     if (msg.includes('timeout') || msg.includes('aborted')) {
       return 'Mekan servisi yanıt vermedi. Birkaç saniye bekleyip tekrar deneyin.'
     }
-    if (msg.includes('[post]') && msg.includes('overpass')) {
-      return 'Mekan servisi yanıt vermedi. Birkaç saniye bekleyip tekrar deneyin.'
-    }
     return err.message
   }
 
   return fallback
-}
-
-async function fetchFromOverpass(query: string): Promise<OverpassResponse> {
-  return $fetch<OverpassResponse>('/api/overpass', {
-    method: 'POST',
-    body: { query },
-    timeout: OVERPASS_FETCH_TIMEOUT_MS,
-    retry: 0,
-  })
-}
-
-interface NearbyFetchPlan {
-  mode: string
-  query: string
-  logExtra?: Record<string, number | string>
-}
-
-function buildNearbyFetchPlans(
-  latitude: number,
-  longitude: number,
-  radiusMeters: number,
-): NearbyFetchPlan[] {
-  const primary = Math.min(radiusMeters, NEARBY_SEARCH_RADIUS_M)
-
-  return [
-    {
-      mode: 'around',
-      query: buildNearbyQueryAround(latitude, longitude, primary, 80, 14),
-      logExtra: { yarıçapKm: Math.round(primary / 100) / 10 },
-    },
-    {
-      mode: 'around-tight',
-      query: buildNearbyQueryAround(latitude, longitude, 2500, 50, 10),
-      logExtra: { yarıçapKm: 2.5 },
-    },
-  ]
 }
 
 export interface FetchNearbyOptions {
@@ -114,8 +34,16 @@ export interface GridProgress {
 }
 
 export interface FetchPlaceByIdOptions {
-  /** Yerel veri zaten gösteriliyorsa API çağrısını arka planda tut */
   silent?: boolean
+}
+
+async function fetchFromOverpass(query: string): Promise<{ elements: unknown[] }> {
+  return $fetch('/api/overpass', {
+    method: 'POST',
+    body: { query },
+    timeout: 22_000,
+    retry: 0,
+  })
 }
 
 export function usePlaces() {
@@ -134,26 +62,19 @@ export function usePlaces() {
     gridProgress.value = null
 
     const radiusMeters = options.radiusMeters ?? NEARBY_SEARCH_RADIUS_M
-    const plans = buildNearbyFetchPlans(latitude, longitude, radiusMeters)
-    let lastError: unknown = null
 
     try {
-      for (const plan of plans) {
-        try {
-          const data = await fetchFromOverpass(plan.query)
-          places.value = mapOverpassResponse(data.elements)
-          logOverpassStats(plan.mode, data.elements.length, places.value.length, plan.logExtra)
+      const data = await $fetch<{ places: Place[] }>('/api/places/nearby', {
+        method: 'POST',
+        body: { latitude, longitude, radiusMeters },
+        timeout: NEARBY_FETCH_TIMEOUT_MS,
+        retry: 0,
+      })
 
-          if (places.value.length > 0) {
-            return places.value
-          }
-        } catch (err) {
-          lastError = err
-        }
-      }
+      places.value = data.places
 
-      if (lastError) {
-        throw lastError
+      if (import.meta.dev) {
+        console.info(`[Places] nominatim-yakın: ${places.value.length} mekan`)
       }
 
       return places.value
@@ -192,7 +113,7 @@ export function usePlaces() {
 
     try {
       const data = await fetchFromOverpass(query)
-      const mapped = mapOverpassResponse(data.elements)
+      const mapped = mapOverpassResponse(data.elements as OverpassElement[])
       const place = mapped[0] ?? null
 
       if (place && !places.value.some(item => item.id === place.id)) {
