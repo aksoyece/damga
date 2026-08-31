@@ -2,7 +2,8 @@
 
 Kişisel gezi defteri — bir şehirdeki ilgi çekici yerleri keşfedin, kendi gezi listenizi oluşturun, not alın ve ziyaretlerinizi damgalayın.
 
-**Canlı:** [damga.vercel.app](https://damga.vercel.app)
+**Canlı:** [damga.vercel.app](https://damga.vercel.app)  
+**GitHub:** [github.com/aksoyece/damga](https://github.com/aksoyece/damga)
 
 ![Ana ekran — arama ve harita](docs/screenshot-home.png)
 
