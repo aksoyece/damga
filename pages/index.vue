@@ -433,11 +433,23 @@ function formatStampDate(iso?: string): string | undefined {
           <h2>{{ selectedPlace.name }}</h2>
           <dl class="selected-place__info">
             <div>
-              <dt>Kategori</dt>
+              <dt>
+                <svg class="selected-place__icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M2 8.5V2.5h6l5.5 5.5-5.5 5.5L2 8.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+                  <circle cx="5.5" cy="5.5" r="1" fill="currentColor" />
+                </svg>
+                Kategori
+              </dt>
               <dd>{{ getCategoryLabel(selectedPlace.category) }}</dd>
             </div>
             <div>
-              <dt>Adres</dt>
+              <dt>
+                <svg class="selected-place__icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M8 14s5-4.5 5-8a5 5 0 1 0-10 0c0 3.5 5 8 5 8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+                  <circle cx="8" cy="6" r="1.25" fill="currentColor" />
+                </svg>
+                Adres
+              </dt>
               <dd>{{ selectedPlace.address ?? '—' }}</dd>
             </div>
           </dl>
