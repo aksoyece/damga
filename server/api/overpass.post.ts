@@ -3,17 +3,12 @@ const USER_AGENT = 'SehirHafizaApp/1.0 (Nuxt MVP; educational project)'
 const OVERPASS_ENDPOINTS = [
   'https://overpass.kumi.systems/api/interpreter',
   'https://lz4.overpass-api.de/api/interpreter',
-  'https://overpass-api.de/api/interpreter',
   'https://overpass.openstreetmap.fr/api/interpreter',
+  'https://overpass-api.de/api/interpreter',
 ]
 
-const RETRIES_PER_ENDPOINT = 2
-const RETRY_DELAY_MS = 1200
-const REQUEST_TIMEOUT_MS = 45_000
-
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
+/** Tek uç nokta denemesi — istemci zaman aşımından kısa tutulmalı */
+const ENDPOINT_TIMEOUT_MS = 16_000
 
 function isFailedOverpassBody(text: string, status: number): boolean {
   if (status === 429 || status === 502 || status === 503 || status === 504) return true
@@ -33,7 +28,7 @@ function parseOverpassResponse(text: string): { elements: unknown[] } | null {
   }
 }
 
-async function queryEndpoint(endpoint: string, query: string): Promise<{ elements: unknown[] } | null> {
+async function queryEndpoint(endpoint: string, query: string): Promise<{ elements: unknown[] }> {
   const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
@@ -42,16 +37,36 @@ async function queryEndpoint(endpoint: string, query: string): Promise<{ element
       'User-Agent': USER_AGENT,
     },
     body: `data=${encodeURIComponent(query)}`,
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    signal: AbortSignal.timeout(ENDPOINT_TIMEOUT_MS),
   })
 
   const text = await response.text()
 
   if (isFailedOverpassBody(text, response.status)) {
-    return null
+    throw new Error('overpass_unavailable')
   }
 
-  return parseOverpassResponse(text)
+  const parsed = parseOverpassResponse(text)
+  if (!parsed) {
+    throw new Error('overpass_invalid')
+  }
+
+  return parsed
+}
+
+async function fetchFromAnyEndpoint(query: string): Promise<{ elements: unknown[] }> {
+  const attempts = OVERPASS_ENDPOINTS.map(endpoint =>
+    queryEndpoint(endpoint, query),
+  )
+
+  try {
+    return await Promise.any(attempts)
+  } catch {
+    throw createError({
+      statusCode: 502,
+      message: 'Overpass geçici olarak yanıt veremedi. Biraz sonra tekrar deneyin.',
+    })
+  }
 }
 
 export default defineEventHandler(async (event) => {
@@ -65,27 +80,16 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  let lastMessage = 'Mekan verileri alınamadı.'
-
-  for (const endpoint of OVERPASS_ENDPOINTS) {
-    for (let attempt = 0; attempt < RETRIES_PER_ENDPOINT; attempt++) {
-      if (attempt > 0) {
-        await sleep(RETRY_DELAY_MS * attempt)
-      }
-
-      try {
-        const result = await queryEndpoint(endpoint, query)
-        if (result) return result
-
-        lastMessage = 'Overpass geçici olarak yanıt veremedi. Biraz sonra tekrar deneyin.'
-      } catch {
-        lastMessage = 'Mekan servisine bağlanılamadı.'
-      }
+  try {
+    return await fetchFromAnyEndpoint(query)
+  } catch (err) {
+    if (err && typeof err === 'object' && 'statusCode' in err) {
+      throw err
     }
-  }
 
-  throw createError({
-    statusCode: 502,
-    message: lastMessage,
-  })
+    throw createError({
+      statusCode: 502,
+      message: 'Mekan servisine bağlanılamadı.',
+    })
+  }
 })

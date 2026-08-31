@@ -1,23 +1,12 @@
 import type { OverpassResponse, Place } from '~/types/place'
 import {
-  LARGE_AREA_SEARCH_RADIUS_M,
   NEARBY_SEARCH_RADIUS_M,
   OVERPASS_AROUND_RESULT_LIMIT,
-  OVERPASS_BBOX_RESULT_LIMIT,
-  shouldUseGridForBounds,
   mapOverpassResponse,
 } from '~/types/place'
 
-const OVERPASS_FETCH_TIMEOUT_MS = 35_000
-
-function buildPoiSelectorsBbox(south: number, west: number, north: number, east: number): string {
-  return `
-      nwr["tourism"](${south},${west},${north},${east});
-      nwr["amenity"~"cafe|restaurant|museum|fast_food"](${south},${west},${north},${east});
-      nwr["leisure"~"park|garden"](${south},${west},${north},${east});
-      nwr["historic"](${south},${west},${north},${east});
-  `
-}
+/** Sunucu paralel uç nokta denemesi + tek sorgu için yeterli süre */
+const OVERPASS_FETCH_TIMEOUT_MS = 22_000
 
 function buildPoiSelectorsAround(latitude: number, longitude: number, radiusMeters: number): string {
   return `
@@ -33,28 +22,12 @@ function buildNearbyQueryAround(
   longitude: number,
   radiusMeters: number,
   resultLimit = OVERPASS_AROUND_RESULT_LIMIT,
-  timeoutSec = 25,
+  timeoutSec = 15,
 ): string {
   return `
     [out:json][timeout:${timeoutSec}];
     (
       ${buildPoiSelectorsAround(latitude, longitude, radiusMeters)}
-    );
-    out center ${resultLimit};
-  `
-}
-
-function buildNearbyQueryFromBounds(
-  bounds: [[number, number], [number, number]],
-  resultLimit = OVERPASS_BBOX_RESULT_LIMIT,
-  timeoutSec = 25,
-): string {
-  const [[south, west], [north, east]] = bounds
-
-  return `
-    [out:json][timeout:${timeoutSec}];
-    (
-      ${buildPoiSelectorsBbox(south, west, north, east)}
     );
     out center ${resultLimit};
   `
@@ -78,8 +51,15 @@ function normalizeError(err: unknown, fallback: string): string {
   }
 
   if (err instanceof Error) {
-    if (err.message === 'Failed to fetch') {
+    const msg = err.message.toLowerCase()
+    if (msg === 'failed to fetch') {
       return 'Sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edin.'
+    }
+    if (msg.includes('timeout') || msg.includes('aborted')) {
+      return 'Mekan servisi yanıt vermedi. Birkaç saniye bekleyip tekrar deneyin.'
+    }
+    if (msg.includes('[post]') && msg.includes('overpass')) {
+      return 'Mekan servisi yanıt vermedi. Birkaç saniye bekleyip tekrar deneyin.'
     }
     return err.message
   }
@@ -97,7 +77,7 @@ async function fetchFromOverpass(query: string): Promise<OverpassResponse> {
 }
 
 interface NearbyFetchPlan {
-  mode: 'around-capped' | 'bbox' | 'around'
+  mode: string
   query: string
   logExtra?: Record<string, number | string>
 }
@@ -105,50 +85,22 @@ interface NearbyFetchPlan {
 function buildNearbyFetchPlans(
   latitude: number,
   longitude: number,
-  options: FetchNearbyOptions,
   radiusMeters: number,
 ): NearbyFetchPlan[] {
-  const plans: NearbyFetchPlan[] = []
+  const primary = Math.min(radiusMeters, NEARBY_SEARCH_RADIUS_M)
 
-  if (options.bounds && shouldUseGridForBounds(options.bounds)) {
-    const radii = [
-      Math.max(radiusMeters, LARGE_AREA_SEARCH_RADIUS_M),
-      NEARBY_SEARCH_RADIUS_M,
-      3000,
-    ]
-
-    for (const radius of [...new Set(radii)]) {
-      plans.push({
-        mode: 'around-capped',
-        query: buildNearbyQueryAround(latitude, longitude, radius, 120, 20),
-        logExtra: { yarıçapKm: Math.round(radius / 100) / 10 },
-      })
-    }
-    return plans
-  }
-
-  if (options.bounds) {
-    plans.push({
-      mode: 'bbox',
-      query: buildNearbyQueryFromBounds(options.bounds, 120, 20),
-    })
-    plans.push({
+  return [
+    {
       mode: 'around',
-      query: buildNearbyQueryAround(latitude, longitude, radiusMeters, 100, 18),
-    })
-    return plans
-  }
-
-  plans.push({
-    mode: 'around',
-    query: buildNearbyQueryAround(latitude, longitude, radiusMeters, 150, 22),
-  })
-  plans.push({
-    mode: 'around',
-    query: buildNearbyQueryAround(latitude, longitude, Math.min(radiusMeters, 3500), 80, 15),
-  })
-
-  return plans
+      query: buildNearbyQueryAround(latitude, longitude, primary, 80, 14),
+      logExtra: { yarıçapKm: Math.round(primary / 100) / 10 },
+    },
+    {
+      mode: 'around-tight',
+      query: buildNearbyQueryAround(latitude, longitude, 2500, 50, 10),
+      logExtra: { yarıçapKm: 2.5 },
+    },
+  ]
 }
 
 export interface FetchNearbyOptions {
@@ -182,7 +134,7 @@ export function usePlaces() {
     gridProgress.value = null
 
     const radiusMeters = options.radiusMeters ?? NEARBY_SEARCH_RADIUS_M
-    const plans = buildNearbyFetchPlans(latitude, longitude, options, radiusMeters)
+    const plans = buildNearbyFetchPlans(latitude, longitude, radiusMeters)
     let lastError: unknown = null
 
     try {

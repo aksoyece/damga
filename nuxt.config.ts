@@ -18,6 +18,17 @@ export default defineNuxtConfig({
       cartoApiKey: '',
     },
   },
+  nitro: {
+    vercel: {
+      config: {
+        functions: {
+          'api/overpass': {
+            maxDuration: 30,
+          },
+        },
+      },
+    },
+  },
   app: {
     head: {
       title: 'Şehir Hafızası',

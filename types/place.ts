@@ -32,8 +32,8 @@ export interface NominatimResult {
 /** Seçilen noktanın etrafında mekan aranırken kullanılan sabit yarıçap (metre) */
 export const NEARBY_SEARCH_RADIUS_M = 5000
 
-/** Geniş il/bölge aramalarında grid yerine merkez + bu yarıçap (metre) */
-export const LARGE_AREA_SEARCH_RADIUS_M = 12_000
+/** Geniş il/bölge aramalarında merkez + bu yarıçap (metre) — 12 km Overpass'i zorlar */
+export const LARGE_AREA_SEARCH_RADIUS_M = 5_000
 
 /** Overpass sonuç limitleri */
 export const OVERPASS_AROUND_RESULT_LIMIT = 200
@@ -127,7 +127,7 @@ export interface PlacesSearchArea {
 
 /**
  * Overpass araması için alan çözümü.
- * Çok geniş bbox (il düzeyi) → grid yerine merkez + LARGE_AREA_SEARCH_RADIUS_M.
+ * Çok geniş bbox (il düzeyi) → grid yerine merkez + NEARBY_SEARCH_RADIUS_M.
  */
 export function resolvePlacesSearchArea(
   latitude: number,
@@ -136,8 +136,8 @@ export function resolvePlacesSearchArea(
 ): PlacesSearchArea {
   if (bounds && shouldUseGridForBounds(bounds)) {
     return {
-      mapBounds: boundsFromRadius(latitude, longitude, LARGE_AREA_SEARCH_RADIUS_M),
-      radiusMeters: LARGE_AREA_SEARCH_RADIUS_M,
+      mapBounds: boundsFromRadius(latitude, longitude, NEARBY_SEARCH_RADIUS_M),
+      radiusMeters: NEARBY_SEARCH_RADIUS_M,
     }
   }
 
