@@ -332,6 +332,17 @@ function formatStampDate(iso?: string): string | undefined {
     </section>
 
     <div v-if="hasSearched" class="discover-layout">
+      <div class="discover-layout__region location-chip">
+        <span><strong>Bölge:</strong> {{ searchedLocation }}</span>
+      </div>
+
+      <div class="discover-layout__filters">
+        <CategoryFilter
+          v-model="selectedCategory"
+          :categories="categoryOptions"
+        />
+      </div>
+
       <section class="discover-layout__map map-section">
         <div class="discover-map">
           <ClientOnly>
@@ -415,91 +426,80 @@ function formatStampDate(iso?: string): string | undefined {
         </section>
       </section>
 
-      <aside class="discover-layout__sidebar sidebar">
-        <div class="location-chip">
-          <span><strong>Bölge:</strong> {{ searchedLocation }}</span>
+      <section class="discover-layout__places panel panel--places discover-places-panel">
+        <div class="panel__head">
+          <div>
+            <p class="panel__title">Keşfedilen mekanlar</p>
+            <p class="panel__subtitle">Arşive eklenecek adaylar</p>
+          </div>
+          <span v-if="placesLoading" class="loading-pill">Yükleniyor</span>
         </div>
 
-        <CategoryFilter
-          v-model="selectedCategory"
-          :categories="categoryOptions"
-        />
+        <div v-if="placesError" class="alert alert--error places-error">
+          <p>{{ placesError }}</p>
+          <button
+            v-if="lastNearbySearch"
+            type="button"
+            class="btn btn--ghost btn--sm"
+            :disabled="placesLoading"
+            @click="retryNearbySearch"
+          >
+            Tekrar dene
+          </button>
+        </div>
 
-        <section class="panel panel--places discover-places-panel">
-          <div class="panel__head">
-            <div>
-              <p class="panel__title">Keşfedilen mekanlar</p>
-              <p class="panel__subtitle">Arşive eklenecek adaylar</p>
-            </div>
-            <span v-if="placesLoading" class="loading-pill">Yükleniyor</span>
+        <div class="places-list">
+          <div v-if="placesLoading" class="panel__hint">
+            <template v-if="gridProgress">
+              {{ gridProgress.current }}/{{ gridProgress.total }} bölge taranıyor…
+              <span v-if="places.length"> ({{ places.length }} mekan bulundu)</span>
+            </template>
+            <template v-else>
+              Mekanlar getiriliyor…
+            </template>
           </div>
 
-          <div v-if="placesError" class="alert alert--error places-error">
-            <p>{{ placesError }}</p>
+          <div v-if="!placesLoading && places.length === 0 && !placesError" class="panel__hint">
+            Bu bölgede kaydedilebilecek mekan bulunamadı.
+          </div>
+
+          <div v-else-if="!placesLoading && places.length > 0 && discoveredPlaces.length === 0" class="panel__hint">
+            Bu bölgedeki mekanların tümü zaten arşivinizde.
+          </div>
+
+          <div v-else-if="!placesLoading && discoveredPlaces.length > 0 && filteredPlaces.length === 0" class="panel__hint">
+            Seçilen kategoride yeni mekan yok.
+          </div>
+
+          <div v-if="!placesLoading && filteredPlaces.length > 0" class="stack stack--places">
+            <PlaceCard
+              v-for="place in visiblePlaces"
+              :key="place.id"
+              :place="placesStore.getSavedPlace(place.id) ?? place"
+              :saved="placesStore.isSaved(place.id)"
+              :highlighted="selectedPlaceId === place.id"
+              show-actions
+              @save="handleSavePlace(place)"
+              @remove="handleRemovePlace(place.id)"
+              @open="openPlace(place.id)"
+              @mark-visited="placesStore.markAsVisited(place.id)"
+              @select="handleSelectPlace(place)"
+            />
             <button
-              v-if="lastNearbySearch"
+              v-if="placesRemaining > 0"
               type="button"
-              class="btn btn--ghost btn--sm"
-              :disabled="placesLoading"
-              @click="retryNearbySearch"
+              class="btn btn--ghost places-show-more"
+              @click="showMorePlaces"
             >
-              Tekrar dene
+              Daha fazla göster (+{{ placesRemaining }})
             </button>
           </div>
+        </div>
+      </section>
 
-          <div class="discover-places-scroll">
-            <div v-if="placesLoading" class="panel__hint">
-              <template v-if="gridProgress">
-                {{ gridProgress.current }}/{{ gridProgress.total }} bölge taranıyor…
-                <span v-if="places.length"> ({{ places.length }} mekan bulundu)</span>
-              </template>
-              <template v-else>
-                Mekanlar getiriliyor…
-              </template>
-            </div>
-
-            <div v-if="!placesLoading && places.length === 0 && !placesError" class="panel__hint">
-              Bu bölgede kaydedilebilecek mekan bulunamadı.
-            </div>
-
-            <div v-else-if="!placesLoading && places.length > 0 && discoveredPlaces.length === 0" class="panel__hint">
-              Bu bölgedeki mekanların tümü zaten arşivinizde.
-            </div>
-
-            <div v-else-if="!placesLoading && discoveredPlaces.length > 0 && filteredPlaces.length === 0" class="panel__hint">
-              Seçilen kategoride yeni mekan yok.
-            </div>
-
-            <div v-if="!placesLoading && filteredPlaces.length > 0" class="stack stack--places">
-              <PlaceCard
-                v-for="place in visiblePlaces"
-                :key="place.id"
-                :place="placesStore.getSavedPlace(place.id) ?? place"
-                :saved="placesStore.isSaved(place.id)"
-                :highlighted="selectedPlaceId === place.id"
-                show-actions
-                @save="handleSavePlace(place)"
-                @remove="handleRemovePlace(place.id)"
-                @open="openPlace(place.id)"
-                @mark-visited="placesStore.markAsVisited(place.id)"
-                @select="handleSelectPlace(place)"
-              />
-              <button
-                v-if="placesRemaining > 0"
-                type="button"
-                class="btn btn--ghost places-show-more"
-                @click="showMorePlaces"
-              >
-                Daha fazla göster (+{{ placesRemaining }})
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <p v-if="placesStore.storageError" class="alert alert--error">
-          {{ placesStore.storageError }}
-        </p>
-      </aside>
+      <p v-if="placesStore.storageError" class="discover-layout__storage-error alert alert--error">
+        {{ placesStore.storageError }}
+      </p>
     </div>
   </div>
 </template>
@@ -600,25 +600,34 @@ function formatStampDate(iso?: string): string | undefined {
 
 .discover-map :deep(.map-wrapper__frame),
 .discover-map :deep(.map-wrapper__canvas) {
-  min-height: 16rem;
-  height: 16rem;
-  max-height: 16rem;
+  height: 320px;
+  min-height: 320px;
+  max-height: 320px;
 }
 
-@media (min-width: 640px) and (max-width: 959px) {
+@media (max-width: 480px) {
   .discover-map :deep(.map-wrapper__frame),
   .discover-map :deep(.map-wrapper__canvas) {
-    min-height: 18rem;
-    height: 18rem;
-    max-height: 18rem;
+    height: 280px;
+    min-height: 280px;
+    max-height: 280px;
   }
 }
 
-@media (min-width: 960px) {
+@media (min-width: 769px) and (max-width: 1024px) {
   .discover-map :deep(.map-wrapper__frame),
   .discover-map :deep(.map-wrapper__canvas) {
-    min-height: 24rem;
+    height: 400px;
+    min-height: 400px;
+    max-height: 400px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .discover-map :deep(.map-wrapper__frame),
+  .discover-map :deep(.map-wrapper__canvas) {
     height: 24rem;
+    min-height: 24rem;
     max-height: 24rem;
   }
 }
