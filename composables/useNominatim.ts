@@ -31,13 +31,29 @@ const EXCLUDED_ADDRESS_TYPES = new Set([
   'continent',
 ])
 
+const LOCAL_ADDRESS_TYPES = new Set([
+  'city',
+  'town',
+  'village',
+  'municipality',
+  'suburb',
+  'neighbourhood',
+  'district',
+  'hamlet',
+  'county',
+])
+
 function isUsefulSearchResult(result: NominatimResult): boolean {
   if (result.addresstype && EXCLUDED_ADDRESS_TYPES.has(result.addresstype)) {
     return false
   }
 
-  // İl/düzeyi idari sınır (ör. "Ankara, İç Anadolu") — merkez güneyde kalır, tarama kayar
+  // İl/düzeyi dev idari sınır (ör. "Ankara, İç Anadolu") — merkez kayar, tarama dağılır
   if (result.class === 'boundary' && result.type === 'administrative') {
+    if (result.addresstype && LOCAL_ADDRESS_TYPES.has(result.addresstype)) {
+      return true
+    }
+
     const bounds = parseNominatimBounds(result.boundingbox)
     if (bounds) {
       const { latKm, lonKm } = boundsSpanKm(bounds)
