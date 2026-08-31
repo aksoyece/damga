@@ -4,6 +4,8 @@ Kişisel gezi defteri — bir şehirdeki ilgi çekici yerleri keşfedin, kendi g
 
 **Canlı:** [sehir-hafizasi.vercel.app](https://sehir-hafizasi.vercel.app)
 
+![Ana ekran — arama ve harita](docs/screenshot-home.png)
+
 ## Temel fikir
 
 Bu projenin amacı yeni bir Google Maps alternatifi oluşturmak **değildir**.
