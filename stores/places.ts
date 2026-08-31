@@ -151,13 +151,27 @@ export const usePlacesStore = defineStore('places', () => {
     persist()
   }
 
-  function markAsVisited(id: string) {
+  function markAsVisited(id: string, visitedAt?: string) {
     initialize()
+
+    const date = (visitedAt?.trim() || new Date().toISOString().slice(0, 10))
 
     updatePlace(id, {
       status: 'visited',
-      visitedAt: new Date().toISOString().slice(0, 10),
+      visitedAt: date,
     })
+  }
+
+  function updateVisitedAt(id: string, visitedAt: string) {
+    initialize()
+
+    const place = getSavedPlace(id)
+    if (!place || place.status !== 'visited') return
+
+    const date = visitedAt.trim()
+    if (!date) return
+
+    updatePlace(id, { visitedAt: date })
   }
 
   function updateRating(id: string, rating: number) {
@@ -192,6 +206,7 @@ export const usePlacesStore = defineStore('places', () => {
     removePlace,
     updatePlace,
     markAsVisited,
+    updateVisitedAt,
     updateRating,
     updateNote,
     filterByStatus,

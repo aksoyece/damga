@@ -16,7 +16,7 @@ defineProps<{
         <h3 class="memory-preview__title">Yeşil Bursa Müzesi</h3>
         <span class="memory-preview__tag">MÜZE</span>
       </div>
-      <PassportStamp date="12.08.26" size="sm" />
+      <PassportStamp date="25.05.26" size="sm" />
     </header>
 
     <div class="memory-preview__rating" aria-label="4 yıldız">
@@ -28,7 +28,8 @@ defineProps<{
     </blockquote>
 
     <footer class="memory-preview__foot">
-      <span class="memory-preview__meta">KAYIT · 05.08.26</span>
+      <span class="memory-preview__meta">Arşive eklendi · 05.08.26</span>
+      <span class="memory-preview__meta">Ziyaret · 25.05.26</span>
     </footer>
   </article>
 </template>
@@ -106,6 +107,9 @@ defineProps<{
 }
 
 .memory-preview__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   padding-top: 0.625rem;
   border-top: 1px solid var(--border-light);
 }

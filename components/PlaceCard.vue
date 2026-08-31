@@ -56,7 +56,7 @@ function onCardClick() {
 
 <template>
   <article
-    class="place-card polaroid-card"
+    class="place-card"
     :class="{
       'place-card--highlighted': highlighted,
       'place-card--saved': saved,
@@ -102,8 +102,8 @@ function onCardClick() {
       </template>
 
       <footer v-if="savedData" class="place-card__meta">
-        <span>KAYIT · {{ formatDate(savedData.savedAt) }}</span>
-        <span v-if="savedData.visitedAt">ZİYARET · {{ formatDate(savedData.visitedAt) }}</span>
+        <span>Arşive eklendi · {{ formatDate(savedData.savedAt) }}</span>
+        <span v-if="savedData.visitedAt">Ziyaret · {{ formatDate(savedData.visitedAt) }}</span>
       </footer>
 
       <div v-if="showActions" class="place-card__actions" @click.stop>
@@ -151,6 +151,7 @@ function onCardClick() {
   border-radius: 16px;
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .place-card:hover {

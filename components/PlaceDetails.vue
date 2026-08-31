@@ -12,20 +12,25 @@ const props = defineProps<{
 const emit = defineEmits<{
   save: []
   remove: []
-  markVisited: []
+  markVisited: [visitedAt: string]
+  updateVisitedAt: [visitedAt: string]
   updateRating: [rating: number]
   updateNote: [note: string]
 }>()
 
 const noteDraft = ref(props.savedPlace?.note ?? '')
 const ratingDraft = ref(props.savedPlace?.rating ?? 0)
+const visitDateDraft = ref(props.savedPlace?.visitedAt ?? todayISO())
 const showLocationInfo = ref(false)
+
+const maxVisitDate = todayISO()
 
 watch(
   () => props.savedPlace,
   (value) => {
     noteDraft.value = value?.note ?? ''
     ratingDraft.value = value?.rating ?? 0
+    visitDateDraft.value = value?.visitedAt ?? todayISO()
   },
 )
 
@@ -36,6 +41,20 @@ function setRating(value: number) {
 
 function submitNote() {
   emit('updateNote', noteDraft.value)
+}
+
+function submitVisitStamp() {
+  if (!visitDateDraft.value) return
+  emit('markVisited', visitDateDraft.value)
+}
+
+function submitVisitDateUpdate() {
+  if (!visitDateDraft.value) return
+  emit('updateVisitedAt', visitDateDraft.value)
+}
+
+function todayISO(): string {
+  return new Date().toISOString().slice(0, 10)
 }
 
 const mapPlaces = computed(() => [props.place])
@@ -91,8 +110,37 @@ function formatDate(iso?: string): string | undefined {
               variant="planned"
             />
             <span v-if="savedPlace.savedAt" class="place-details__meta">
-              Kayıt · {{ formatDate(savedPlace.savedAt) }}
+              Arşive eklendi · {{ formatDate(savedPlace.savedAt) }}
             </span>
+          </div>
+
+          <div class="place-details__field">
+            <span class="place-details__field-label">Ziyaret tarihi</span>
+            <p class="place-details__hint place-details__hint--inline">
+              Gerçek ziyaret gününü seçin; arşive ekleme tarihinden farklı olabilir.
+            </p>
+            <input
+              v-model="visitDateDraft"
+              type="date"
+              class="place-details__date-input"
+              :max="maxVisitDate"
+            >
+            <button
+              v-if="savedPlace.status === 'planned'"
+              type="button"
+              class="btn btn--primary btn--sm"
+              @click="submitVisitStamp"
+            >
+              Ziyaret damgası bas
+            </button>
+            <button
+              v-else
+              type="button"
+              class="btn btn--ghost btn--sm"
+              @click="submitVisitDateUpdate"
+            >
+              Ziyaret tarihini kaydet
+            </button>
           </div>
 
           <div class="place-details__field">
@@ -126,14 +174,6 @@ function formatDate(iso?: string): string | undefined {
           </label>
 
           <div class="place-details__actions">
-            <button
-              v-if="savedPlace.status === 'planned'"
-              type="button"
-              class="btn btn--primary"
-              @click="emit('markVisited')"
-            >
-              Ziyaret damgası bas
-            </button>
             <button type="button" class="btn btn--danger btn--sm" @click="emit('remove')">
               Arşivden kaldır
             </button>
@@ -303,6 +343,29 @@ function formatDate(iso?: string): string | undefined {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-subtle);
+}
+
+.place-details__hint--inline {
+  margin: 0 0 0.5rem;
+}
+
+.place-details__date-input {
+  width: 100%;
+  max-width: 14rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-hover);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  transition: border-color var(--transition);
+}
+
+.place-details__date-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--bg-card);
 }
 
 .place-details__field textarea {
