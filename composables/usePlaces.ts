@@ -59,6 +59,7 @@ export function usePlaces() {
     loading.value = true
     error.value = null
     gridProgress.value = null
+    places.value = []
 
     try {
       const data = await $fetch<{ places: Place[] }>('/api/places/nearby', {
