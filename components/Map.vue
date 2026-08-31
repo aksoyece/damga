@@ -110,6 +110,7 @@ async function initMap() {
     map = L.map(mapContainer.value, {
       preferCanvas: true,
       zoomControl: true,
+      scrollWheelZoom: false,
       fadeAnimation: false,
       markerZoomAnimation: false,
       zoomAnimation: false,

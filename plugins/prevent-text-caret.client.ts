@@ -11,6 +11,11 @@ export default defineNuxtPlugin(() => {
       return
     }
 
+    // Orta tuş (auto-scroll) ve sağ tık davranışını bozma
+    if (event.button !== 0) {
+      return
+    }
+
     if (target.closest(INTERACTIVE_SELECTOR)) {
       return
     }
