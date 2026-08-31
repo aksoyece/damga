@@ -1,5 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || 'https://sehir-hafizasi.vercel.app'
+const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || 'https://damga.vercel.app'
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',

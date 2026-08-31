@@ -1,8 +1,8 @@
-# Damga (Şehir Hafızası)
+# Damga
 
 Kişisel gezi defteri — bir şehirdeki ilgi çekici yerleri keşfedin, kendi gezi listenizi oluşturun, not alın ve ziyaretlerinizi damgalayın.
 
-**Canlı:** [sehir-hafizasi.vercel.app](https://sehir-hafizasi.vercel.app)
+**Canlı:** [damga.vercel.app](https://damga.vercel.app)
 
 ![Ana ekran — arama ve harita](docs/screenshot-home.png)
 
@@ -124,7 +124,7 @@ npm run preview  # build sonrası önizleme
 
 | Değişken | Açıklama |
 |---|---|
-| `NUXT_PUBLIC_SITE_URL` | Canonical site URL (varsayılan: `https://sehir-hafizasi.vercel.app`) |
+| `NUXT_PUBLIC_SITE_URL` | Canonical site URL (varsayılan: `https://damga.vercel.app`) |
 
 ## MVP kapsamı
 
