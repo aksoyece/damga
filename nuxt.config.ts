@@ -37,6 +37,28 @@ export default defineNuxtConfig({
       title: 'Şehir Hafızası',
       link: [
         {
+          rel: 'icon',
+          type: 'image/svg+xml',
+          href: '/favicon.svg',
+        },
+        {
+          rel: 'icon',
+          type: 'image/png',
+          sizes: '32x32',
+          href: '/icons/favicon-32.png',
+        },
+        {
+          rel: 'icon',
+          type: 'image/png',
+          sizes: '16x16',
+          href: '/icons/favicon-16.png',
+        },
+        {
+          rel: 'apple-touch-icon',
+          sizes: '180x180',
+          href: '/apple-touch-icon.png',
+        },
+        {
           rel: 'preconnect',
           href: 'https://a.basemaps.cartocdn.com',
         },
@@ -66,6 +88,26 @@ export default defineNuxtConfig({
         {
           name: 'description',
           content: 'Kişisel gezi günlüğünüz — mekanları kaydedin, puanlayın, not alın ve ziyaretlerinizi damgalayın.',
+        },
+        {
+          property: 'og:title',
+          content: 'Şehir Hafızası',
+        },
+        {
+          property: 'og:description',
+          content: 'Kişisel gezi günlüğünüz — mekanları kaydedin, puanlayın, not alın ve ziyaretlerinizi damgalayın.',
+        },
+        {
+          property: 'og:image',
+          content: 'https://sehir-hafizasi.vercel.app/og-image.png',
+        },
+        {
+          property: 'og:type',
+          content: 'website',
+        },
+        {
+          name: 'theme-color',
+          content: '#FF5A1F',
         },
       ],
     },

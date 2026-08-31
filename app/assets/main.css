@@ -211,14 +211,7 @@ select {
   place-items: center;
   width: 2.5rem;
   height: 2.5rem;
-  border: 2px solid var(--primary);
-  border-radius: 0.5rem;
-  background: var(--primary);
-  color: #FFFFFF;
-  font-family: var(--font-display);
-  font-size: 0.8125rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  color: var(--primary);
 }
 
 .layout__brand-text strong {

@@ -3,7 +3,9 @@
     <header class="layout__header">
       <div class="layout__inner">
         <NuxtLink to="/" class="layout__brand">
-          <span class="layout__brand-mark">ŞH</span>
+          <span class="layout__brand-mark" aria-hidden="true">
+            <Logo :size="40" />
+          </span>
           <span class="layout__brand-text">
             <strong>Şehir Hafızası</strong>
             <small>Kişisel gezi günlüğü</small>
