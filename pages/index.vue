@@ -226,11 +226,8 @@ function formatStampDate(iso?: string): string | undefined {
         <span class="page-hero__badge">Kişisel gezi defteri</span>
         <h1>Gittiğin yerleri hatırla, not al, damgala</h1>
         <p>
-          OpenStreetMap ve Nominatim yalnızca mekan verisi sağlar — bu bir harita
-          uygulaması değil, kişisel gezi arşivinizdir. Aylar sonra
-          <em>“Bursa'da ne görmek istiyordum?”</em> veya
-          <em>“Geçen ay beğendiğim yerler hangileriydi?”</em> sorularının cevabı
-          puanlarınız, notlarınız ve ziyaret damgalarınızda.
+          Harita uygulaması değil; kişisel gezi defterin.
+          Planladıkların, gittiklerin ve notların hep burada.
         </p>
 
         <div v-if="savedPlaces.length > 0" class="archive-stats">
