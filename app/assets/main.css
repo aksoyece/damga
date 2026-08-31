@@ -65,6 +65,30 @@ body {
   background-image: none;
 }
 
+/* Statik arayüz metinleri — tıklanınca metin imleci / seçim yok (site geneli) */
+.layout :where(
+  h1, h2, h3, h4, h5, h6,
+  p, span, small, strong, em, dt, dd, li
+) {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+.layout :where(input, textarea, select) {
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
+}
+
+.layout :where(a, button, .btn, [role='button'], label[for], .filter-tabs__btn) {
+  cursor: pointer;
+}
+
+.layout :where(input[type='search'], input[type='text'], input[type='date'], textarea) {
+  cursor: text;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -430,9 +454,6 @@ select {
   color: var(--text-muted);
   font-size: 0.8125rem;
   line-height: 1.55;
-  user-select: none;
-  -webkit-user-select: none;
-  cursor: default;
 }
 
 .stack {
