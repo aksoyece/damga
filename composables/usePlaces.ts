@@ -1,13 +1,10 @@
-import type { OverpassElement, OverpassResponse, Place } from '~/types/place'
+import type { OverpassResponse, Place } from '~/types/place'
 import {
-  GRID_CELL_RETRY_COUNT,
-  GRID_QUERY_BATCH_DELAY_MS,
+  LARGE_AREA_SEARCH_RADIUS_M,
   NEARBY_SEARCH_RADIUS_M,
   OVERPASS_AROUND_RESULT_LIMIT,
   OVERPASS_BBOX_RESULT_LIMIT,
-  OVERPASS_CELL_RESULT_LIMIT,
   shouldUseGridForBounds,
-  splitBoundsIntoGrid,
   mapOverpassResponse,
 } from '~/types/place'
 
@@ -36,25 +33,6 @@ function buildPoiSelectorsAround(latitude: number, longitude: number, radiusMete
       way["leisure"~"park|garden"](around:${radiusMeters},${latitude},${longitude});
       node["historic"](around:${radiusMeters},${latitude},${longitude});
       way["historic"](around:${radiusMeters},${latitude},${longitude});
-  `
-}
-
-/** Izgara hücreleri için hafif sorgu — yalnızca node, daha hızlı */
-function buildGridCellQuery(
-  bounds: [[number, number], [number, number]],
-  resultLimit = OVERPASS_CELL_RESULT_LIMIT,
-): string {
-  const [[south, west], [north, east]] = bounds
-
-  return `
-    [out:json][timeout:20];
-    (
-      node["tourism"](${south},${west},${north},${east});
-      node["amenity"~"cafe|restaurant|museum|fast_food"](${south},${west},${north},${east});
-      node["leisure"~"park|garden"](${south},${west},${north},${east});
-      node["historic"](${south},${west},${north},${east});
-    );
-    out body ${resultLimit};
   `
 }
 
@@ -87,15 +65,6 @@ function buildNearbyQueryFromBounds(
     );
     out center ${resultLimit};
   `
-}
-
-function mergeElements(
-  target: Map<string, OverpassElement>,
-  elements: OverpassElement[],
-): void {
-  for (const element of elements) {
-    target.set(`${element.type}-${element.id}`, element)
-  }
 }
 
 function logOverpassStats(
@@ -133,79 +102,6 @@ async function fetchFromOverpass(query: string): Promise<OverpassResponse> {
   })
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-async function fetchCellElements(
-  cell: [[number, number], [number, number]],
-): Promise<OverpassElement[] | null> {
-  const query = buildGridCellQuery(cell)
-
-  for (let attempt = 0; attempt <= GRID_CELL_RETRY_COUNT; attempt++) {
-    try {
-      const data = await fetchFromOverpass(query)
-      return data.elements
-    } catch {
-      if (attempt < GRID_CELL_RETRY_COUNT) {
-        await delay(1500 * (attempt + 1))
-      }
-    }
-  }
-
-  return null
-}
-
-interface GridFetchResult {
-  places: Place[]
-  failedCells: number
-  totalCells: number
-}
-
-async function fetchFromGrid(
-  bounds: [[number, number], [number, number]],
-  onProgress: (places: Place[], current: number, total: number) => void,
-): Promise<GridFetchResult> {
-  const { cells, cellSizeKm } = splitBoundsIntoGrid(bounds)
-  const elementMap = new Map<string, OverpassElement>()
-  let rawTotal = 0
-  let failedCells = 0
-
-  for (let i = 0; i < cells.length; i++) {
-    const elements = await fetchCellElements(cells[i]!)
-
-    if (elements === null) {
-      failedCells++
-    } else {
-      rawTotal += elements.length
-      mergeElements(elementMap, elements)
-    }
-
-    const places = mapOverpassResponse([...elementMap.values()])
-    onProgress(places, i + 1, cells.length)
-
-    if (import.meta.dev) {
-      console.info(
-        `[Overpass] grid: ${i + 1}/${cells.length} hücre (${cellSizeKm}km), mekan=${places.length}, hata=${failedCells}`,
-      )
-    }
-
-    if (i + 1 < cells.length) {
-      await delay(GRID_QUERY_BATCH_DELAY_MS)
-    }
-  }
-
-  const places = mapOverpassResponse([...elementMap.values()])
-  logOverpassStats('grid', rawTotal, places.length, {
-    hücre: cells.length,
-    hücreKm: cellSizeKm,
-    hata: failedCells,
-    benzersiz: elementMap.size,
-  })
-
-  return { places, failedCells, totalCells: cells.length }
-}
-
 export interface FetchNearbyOptions {
   bounds?: [[number, number], [number, number]]
   radiusMeters?: number
@@ -234,21 +130,15 @@ export function usePlaces() {
     const radiusMeters = options.radiusMeters ?? NEARBY_SEARCH_RADIUS_M
 
     try {
+      // Geniş il bbox'ı → grid yerine merkez + sabit yarıçap (daha hızlı, stabil)
       if (options.bounds && shouldUseGridForBounds(options.bounds)) {
-        const gridResult = await fetchFromGrid(options.bounds, (partial, current, total) => {
-          places.value = partial
-          gridProgress.value = { current, total }
+        const effectiveRadius = Math.max(radiusMeters, LARGE_AREA_SEARCH_RADIUS_M)
+        const query = buildNearbyQueryAround(latitude, longitude, effectiveRadius)
+        const data = await fetchFromOverpass(query)
+        places.value = mapOverpassResponse(data.elements)
+        logOverpassStats('around-capped', data.elements.length, places.value.length, {
+          yarıçapKm: Math.round(effectiveRadius / 100) / 10,
         })
-
-        places.value = gridResult.places
-
-        if (places.value.length === 0) {
-          error.value = gridResult.failedCells > 0
-            ? 'Overpass geçici olarak yanıt veremedi. Lütfen biraz sonra tekrar deneyin.'
-            : 'Bu bölgede kaydedilebilecek mekan bulunamadı.'
-          return []
-        }
-
         return places.value
       }
 

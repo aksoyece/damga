@@ -32,6 +32,9 @@ export interface NominatimResult {
 /** Seçilen noktanın etrafında mekan aranırken kullanılan sabit yarıçap (metre) */
 export const NEARBY_SEARCH_RADIUS_M = 5000
 
+/** Geniş il/bölge aramalarında grid yerine merkez + bu yarıçap (metre) */
+export const LARGE_AREA_SEARCH_RADIUS_M = 12_000
+
 /** Overpass sonuç limitleri */
 export const OVERPASS_AROUND_RESULT_LIMIT = 200
 export const OVERPASS_BBOX_RESULT_LIMIT = 200
@@ -41,7 +44,7 @@ export const OVERPASS_CELL_RESULT_LIMIT = 200
 export const GRID_CELL_SIZE_KM = 15
 export const GRID_MAX_CELLS = 9
 export const GRID_QUERY_BATCH_SIZE = 1
-export const GRID_QUERY_BATCH_DELAY_MS = 1200
+export const GRID_QUERY_BATCH_DELAY_MS = 700
 export const GRID_CELL_RETRY_COUNT = 1
 
 /** Haritada aynı anda gösterilecek maksimum pin (canvas circleMarker) */
@@ -114,6 +117,42 @@ export function boundsFromRadius(
     [latitude - latDelta, longitude - lonDelta],
     [latitude + latDelta, longitude + lonDelta],
   ]
+}
+
+export interface PlacesSearchArea {
+  mapBounds: [[number, number], [number, number]]
+  bounds?: [[number, number], [number, number]]
+  radiusMeters: number
+}
+
+/**
+ * Overpass araması için alan çözümü.
+ * Çok geniş bbox (il düzeyi) → grid yerine merkez + LARGE_AREA_SEARCH_RADIUS_M.
+ */
+export function resolvePlacesSearchArea(
+  latitude: number,
+  longitude: number,
+  bounds?: [[number, number], [number, number]],
+): PlacesSearchArea {
+  if (bounds && shouldUseGridForBounds(bounds)) {
+    return {
+      mapBounds: boundsFromRadius(latitude, longitude, LARGE_AREA_SEARCH_RADIUS_M),
+      radiusMeters: LARGE_AREA_SEARCH_RADIUS_M,
+    }
+  }
+
+  if (bounds) {
+    return {
+      mapBounds: bounds,
+      bounds,
+      radiusMeters: NEARBY_SEARCH_RADIUS_M,
+    }
+  }
+
+  return {
+    mapBounds: boundsFromRadius(latitude, longitude, NEARBY_SEARCH_RADIUS_M),
+    radiusMeters: NEARBY_SEARCH_RADIUS_M,
+  }
 }
 
 export interface OverpassElement {

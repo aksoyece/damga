@@ -1,7 +1,7 @@
 ﻿<script setup lang="ts">
 import type { Place, SavedPlace } from '~/types/place'
 import type { SearchResult } from '~/types/place'
-import { NEARBY_SEARCH_RADIUS_M, MAX_MAP_PINS, boundsFromRadius, buildCategoryOptions, getCategoryLabel } from '~/types/place'
+import { MAX_MAP_PINS, buildCategoryOptions, getCategoryLabel, resolvePlacesSearchArea } from '~/types/place'
 import { storeToRefs } from 'pinia'
 
 const router = useRouter()
@@ -137,15 +137,16 @@ async function handleSelectResult(result: SearchResult) {
   hasSearched.value = true
   searchedLocation.value = result.displayName
   mapCenter.value = [result.latitude, result.longitude]
-  mapBounds.value = result.bounds ?? boundsFromRadius(result.latitude, result.longitude)
+  const searchArea = resolvePlacesSearchArea(result.latitude, result.longitude, result.bounds)
+  mapBounds.value = searchArea.mapBounds
   mapZoom.value = 14
   selectedCategory.value = 'all'
   selectedPlaceId.value = null
   clearResults()
   visiblePlacesCount.value = PLACES_PAGE_SIZE
   await fetchNearbyPlaces(result.latitude, result.longitude, {
-    bounds: result.bounds,
-    radiusMeters: NEARBY_SEARCH_RADIUS_M,
+    bounds: searchArea.bounds,
+    radiusMeters: searchArea.radiusMeters,
   })
 }
 
