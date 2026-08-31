@@ -340,6 +340,11 @@ select {
   max-width: 34rem;
 }
 
+.page-hero p em {
+  font-style: normal;
+  color: var(--secondary);
+}
+
 .page-hero--compact {
   padding: 1.375rem 1.625rem;
 }

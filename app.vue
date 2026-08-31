@@ -8,7 +8,7 @@
           </span>
           <span class="layout__brand-text">
             <strong>Şehir Hafızası</strong>
-            <small>Kişisel gezi günlüğü</small>
+            <small>Kişisel şehir hafızası</small>
           </span>
         </NuxtLink>
 
@@ -25,7 +25,7 @@
 
     <footer class="layout__footer">
       <div class="layout__footer-inner">
-        Konum verileri OpenStreetMap · Notlarınız yalnızca tarayıcınızda saklanır
+        Konum verileri OpenStreetMap · Listeniz, notlarınız ve puanlarınız yalnızca tarayıcınızda saklanır
       </div>
     </footer>
   </div>

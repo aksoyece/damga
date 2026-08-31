@@ -300,7 +300,7 @@ onUnmounted(() => {
       <div>
         <span class="map-wrapper__title">Konum referansı</span>
         <p class="map-wrapper__subtitle">
-          Harita yalnızca mekan bulmak için
+          Konum referansı — mekan bulmak için
           <span v-if="compact" class="map-wrapper__hint"> · üzerine gelince büyür</span>
         </p>
       </div>

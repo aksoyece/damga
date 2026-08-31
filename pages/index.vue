@@ -223,11 +223,14 @@ function formatStampDate(iso?: string): string | undefined {
   <div class="page">
     <header class="page-hero">
       <div class="page-hero__content">
-        <span class="page-hero__badge">Kişisel gezi arşivi</span>
+        <span class="page-hero__badge">Kişisel şehir hafızası</span>
         <h1>Gittiğin yerleri hatırla, not al, damgala</h1>
         <p>
-          Harita yalnızca mekan bulmak için bir araç. Asıl değer sizin puanlarınız,
-          notlarınız ve ziyaret damgalarınızdır.
+          OpenStreetMap ve Nominatim yalnızca mekan verisi sağlar — bu bir harita
+          uygulaması değil, kişisel gezi arşivinizdir. Aylar sonra
+          <em>“Bursa'da ne görmek istiyordum?”</em> veya
+          <em>“Geçen ay beğendiğim yerler hangileriydi?”</em> sorularının cevabı
+          puanlarınız, notlarınız ve ziyaret damgalarınızda.
         </p>
 
         <div v-if="savedPlaces.length > 0" class="archive-stats">
@@ -292,7 +295,8 @@ function formatStampDate(iso?: string): string | undefined {
           </div>
 
           <p class="panel__hint">
-            Bir şehir veya adres arayın; bulduğunuz mekanları arşivinize ekleyip not alın.
+            Şehir veya adres arayın, keşfettiğiniz mekanları arşivinize ekleyin.
+            Harita yalnızca konum bulmak içindir; asıl değer sizin listeniz ve notlarınız.
           </p>
 
           <SearchInput

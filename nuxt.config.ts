@@ -87,7 +87,7 @@ export default defineNuxtConfig({
       meta: [
         {
           name: 'description',
-          content: 'Kişisel gezi günlüğünüz — mekanları kaydedin, puanlayın, not alın ve ziyaretlerinizi damgalayın.',
+          content: 'Kişisel şehir hafızanız — mekan keşfedin, listenizi oluşturun, not alın ve ziyaret damgalarınızı saklayın. Hesap yok; verileriniz tarayıcınızda kalır.',
         },
         {
           property: 'og:title',
@@ -95,7 +95,7 @@ export default defineNuxtConfig({
         },
         {
           property: 'og:description',
-          content: 'Kişisel gezi günlüğünüz — mekanları kaydedin, puanlayın, not alın ve ziyaretlerinizi damgalayın.',
+          content: 'Kişisel şehir hafızanız — mekan keşfedin, listenizi oluşturun, not alın ve ziyaret damgalarınızı saklayın. Hesap yok; verileriniz tarayıcınızda kalır.',
         },
         {
           property: 'og:image',

@@ -29,7 +29,9 @@ const notedCount = computed(() =>
         <span class="page-hero__badge">Kişisel arşiv</span>
         <h1>Gezi günlüğünüz</h1>
         <p>
-          Kaydettiğiniz mekanlar, notlarınız ve ziyaret damgalarınız — hepsi burada.
+          Kaydettiğiniz mekanlar, notlarınız ve ziyaret damgalarınız — hesap gerektirmeden,
+          yalnızca tarayıcınızda saklanan kişisel veriniz. Planladıklarınızı ve
+          gittiğiniz yerleri buradan hatırlayın.
         </p>
 
         <div v-if="savedPlaces.length > 0" class="archive-stats">
