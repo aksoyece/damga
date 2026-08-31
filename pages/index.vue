@@ -26,6 +26,7 @@ const selectedPlaceId = ref<string | null>(null)
 const saveMessage = ref<string | null>(null)
 const hasSearched = ref(false)
 const searchedLocation = ref<string | null>(null)
+const searchedCity = ref<string | null>(null)
 
 const PLACES_PAGE_SIZE = 10
 const visiblePlacesCount = ref(PLACES_PAGE_SIZE)
@@ -151,6 +152,7 @@ async function handleSearch(query: string) {
 async function handleSelectResult(result: SearchResult) {
   hasSearched.value = true
   searchedLocation.value = result.displayName
+  searchedCity.value = result.city ?? null
   mapCenter.value = [result.latitude, result.longitude]
   const searchArea = resolvePlacesSearchArea(result.latitude, result.longitude, result.bounds)
   mapBounds.value = searchArea.mapBounds
@@ -180,6 +182,7 @@ function handleClearSearch() {
   clearResults()
   hasSearched.value = false
   searchedLocation.value = null
+  searchedCity.value = null
   selectedPlaceId.value = null
   selectedCategory.value = 'all'
   clearPlaces()
@@ -199,7 +202,7 @@ function handleSavePlace(place: Place) {
     saveMessage.value = 'Bu mekan zaten arşivinizde.'
     return
   }
-  placesStore.addPlace(place)
+  placesStore.addPlace(place, { city: searchedCity.value ?? undefined })
   saveMessage.value = `"${place.name}" arşivinize eklendi — not ve puan ekleyebilirsiniz.`
 }
 
@@ -221,16 +224,19 @@ function formatStampDate(iso?: string): string | undefined {
 
 <template>
   <div class="page">
-    <header class="page-hero">
+    <header class="page-hero" :class="{ 'page-hero--compact': hasSearched }">
       <div class="page-hero__content">
         <span class="page-hero__badge">Kişisel gezi defteri</span>
         <h1>Gittiğin yerleri hatırla, not al, damgala</h1>
-        <p>
+        <p v-if="!hasSearched">
           Harita uygulaması değil; kişisel gezi defterin.
           Planladıkların, gittiklerin ve notların hep burada.
         </p>
+        <p v-else class="page-hero__search-hint">
+          {{ searchedCity ? `${searchedCity} — keşfedilen mekanlar` : 'Keşfedilen mekanlar' }}
+        </p>
 
-        <div v-if="savedPlaces.length > 0" class="archive-stats">
+        <div v-if="savedPlaces.length > 0 && !hasSearched" class="archive-stats">
           <div class="archive-stats__item">
             <span class="archive-stats__value">{{ savedPlaces.length }}</span>
             <span class="archive-stats__label">Kayıtlı mekan</span>
@@ -246,7 +252,7 @@ function formatStampDate(iso?: string): string | undefined {
         </div>
       </div>
 
-      <MemoryCardPreview sample />
+      <MemoryCardPreview v-if="!hasSearched && savedPlaces.length === 0" sample />
     </header>
 
     <p v-if="saveMessage" class="alert alert--success">
@@ -281,135 +287,53 @@ function formatStampDate(iso?: string): string | undefined {
       </div>
     </section>
 
-    <div class="grid-two">
-      <aside class="sidebar">
-        <section class="panel panel--search">
-          <div class="panel__head">
-            <div>
-              <p class="panel__title">Yeni mekan ekle</p>
-              <p class="panel__subtitle">Konum arama</p>
+    <section
+      class="panel panel--search"
+      :class="{ 'search-landing': !hasSearched }"
+    >
+      <div class="panel__head">
+        <div>
+          <p class="panel__title">{{ hasSearched ? 'Bölge arama' : 'Başlamak için bir şehir veya adres arayın' }}</p>
+          <p v-if="!hasSearched" class="panel__subtitle">Konum arama</p>
+        </div>
+      </div>
+
+      <p v-if="!hasSearched" class="panel__hint search-landing__hint">
+        Örneğin Bursa, Kadıköy veya tam bir adres yazın — ardından mekanları keşfedip arşivinize ekleyin.
+      </p>
+
+      <SearchInput
+        :autofocus="!hasSearched"
+        :loading="searchLoading"
+        :error="searchError"
+        :results="results"
+        :selection-made="hasSearched"
+        @search="handleSearch"
+        @select="handleSelectResult"
+        @clear="handleClearSearch"
+      />
+
+      <div v-if="!hasSearched" class="draft-card">
+        <p class="draft-card__label">Böyle görünecek</p>
+        <div class="draft-card__inner">
+          <article class="draft-entry">
+            <div class="draft-entry__head">
+              <div>
+                <h4>Uludağ Teleferik</h4>
+                <span class="draft-entry__tag">TURİSTİK</span>
+              </div>
+              <PassportStamp label="PLAN" variant="planned" size="sm" />
             </div>
-          </div>
+            <p class="draft-entry__note">“Manzara için kesinlikle tekrar…”</p>
+            <span class="draft-entry__meta">KAYIT · BEKLEMEDE</span>
+          </article>
+        </div>
+      </div>
+    </section>
 
-          <p class="panel__hint">
-            Şehir veya adres arayın, keşfettiğiniz mekanları arşivinize ekleyin.
-            Harita yalnızca konum bulmak içindir; asıl değer sizin listeniz ve notlarınız.
-          </p>
-
-          <SearchInput
-            :loading="searchLoading"
-            :error="searchError"
-            :results="results"
-            :selection-made="hasSearched"
-            @search="handleSearch"
-            @select="handleSelectResult"
-            @clear="handleClearSearch"
-          />
-
-          <div v-if="!hasSearched" class="draft-card">
-            <p class="draft-card__label">Böyle görünecek</p>
-            <div class="draft-card__inner">
-              <article class="draft-entry">
-                <div class="draft-entry__head">
-                  <div>
-                    <h4>Uludağ Teleferik</h4>
-                    <span class="draft-entry__tag">TURİSTİK</span>
-                  </div>
-                  <PassportStamp label="PLAN" variant="planned" size="sm" />
-                </div>
-                <p class="draft-entry__note">“Manzara için kesinlikle tekrar…”</p>
-                <span class="draft-entry__meta">KAYIT · BEKLEMEDE</span>
-              </article>
-            </div>
-          </div>
-
-          <template v-if="hasSearched">
-            <div class="location-chip">
-              <span><strong>Bölge:</strong> {{ searchedLocation }}</span>
-            </div>
-            <CategoryFilter
-              v-model="selectedCategory"
-              :categories="categoryOptions"
-            />
-          </template>
-        </section>
-
-        <section v-if="hasSearched" class="panel panel--places">
-          <div class="panel__head">
-            <div>
-              <p class="panel__title">Keşfedilen mekanlar</p>
-              <p class="panel__subtitle">Arşive eklenecek adaylar</p>
-            </div>
-            <span v-if="placesLoading" class="loading-pill">Yükleniyor</span>
-          </div>
-
-          <div v-if="placesError" class="alert alert--error places-error">
-            <p>{{ placesError }}</p>
-            <button
-              v-if="lastNearbySearch"
-              type="button"
-              class="btn btn--ghost btn--sm"
-              :disabled="placesLoading"
-              @click="retryNearbySearch"
-            >
-              Tekrar dene
-            </button>
-          </div>
-
-          <div v-if="placesLoading" class="panel__hint">
-            <template v-if="gridProgress">
-              {{ gridProgress.current }}/{{ gridProgress.total }} bölge taranıyor…
-              <span v-if="places.length"> ({{ places.length }} mekan bulundu)</span>
-            </template>
-            <template v-else>
-              Mekanlar getiriliyor…
-            </template>
-          </div>
-
-          <div v-if="!placesLoading && places.length === 0 && !placesError" class="panel__hint">
-            Bu bölgede kaydedilebilecek mekan bulunamadı.
-          </div>
-
-          <div v-else-if="!placesLoading && places.length > 0 && discoveredPlaces.length === 0" class="panel__hint">
-            Bu bölgedeki mekanların tümü zaten arşivinizde.
-          </div>
-
-          <div v-else-if="!placesLoading && discoveredPlaces.length > 0 && filteredPlaces.length === 0" class="panel__hint">
-            Seçilen kategoride yeni mekan yok.
-          </div>
-
-          <div v-if="!placesLoading && filteredPlaces.length > 0" class="stack stack--places">
-            <PlaceCard
-              v-for="place in visiblePlaces"
-              :key="place.id"
-              :place="placesStore.getSavedPlace(place.id) ?? place"
-              :saved="placesStore.isSaved(place.id)"
-              :highlighted="selectedPlaceId === place.id"
-              show-actions
-              @save="handleSavePlace(place)"
-              @remove="handleRemovePlace(place.id)"
-              @open="openPlace(place.id)"
-              @mark-visited="placesStore.markAsVisited(place.id)"
-              @select="handleSelectPlace(place)"
-            />
-            <button
-              v-if="placesRemaining > 0"
-              type="button"
-              class="btn btn--ghost places-show-more"
-              @click="showMorePlaces"
-            >
-              Daha fazla göster (+{{ placesRemaining }})
-            </button>
-          </div>
-        </section>
-
-        <p v-if="placesStore.storageError" class="alert alert--error">
-          {{ placesStore.storageError }}
-        </p>
-      </aside>
-
-      <section class="map-section">
-        <div class="map-expandable">
+    <div v-if="hasSearched" class="discover-layout">
+      <section class="discover-layout__map map-section">
+        <div class="map-expandable map-expandable--center">
           <ClientOnly>
             <Map
               :center="mapCenter"
@@ -490,6 +414,90 @@ function formatStampDate(iso?: string): string | undefined {
           </div>
         </section>
       </section>
+
+      <aside class="discover-layout__sidebar sidebar">
+        <div class="location-chip">
+          <span><strong>Bölge:</strong> {{ searchedLocation }}</span>
+        </div>
+
+        <CategoryFilter
+          v-model="selectedCategory"
+          :categories="categoryOptions"
+        />
+
+        <section class="panel panel--places">
+          <div class="panel__head">
+            <div>
+              <p class="panel__title">Keşfedilen mekanlar</p>
+              <p class="panel__subtitle">Arşive eklenecek adaylar</p>
+            </div>
+            <span v-if="placesLoading" class="loading-pill">Yükleniyor</span>
+          </div>
+
+          <div v-if="placesError" class="alert alert--error places-error">
+            <p>{{ placesError }}</p>
+            <button
+              v-if="lastNearbySearch"
+              type="button"
+              class="btn btn--ghost btn--sm"
+              :disabled="placesLoading"
+              @click="retryNearbySearch"
+            >
+              Tekrar dene
+            </button>
+          </div>
+
+          <div v-if="placesLoading" class="panel__hint">
+            <template v-if="gridProgress">
+              {{ gridProgress.current }}/{{ gridProgress.total }} bölge taranıyor…
+              <span v-if="places.length"> ({{ places.length }} mekan bulundu)</span>
+            </template>
+            <template v-else>
+              Mekanlar getiriliyor…
+            </template>
+          </div>
+
+          <div v-if="!placesLoading && places.length === 0 && !placesError" class="panel__hint">
+            Bu bölgede kaydedilebilecek mekan bulunamadı.
+          </div>
+
+          <div v-else-if="!placesLoading && places.length > 0 && discoveredPlaces.length === 0" class="panel__hint">
+            Bu bölgedeki mekanların tümü zaten arşivinizde.
+          </div>
+
+          <div v-else-if="!placesLoading && discoveredPlaces.length > 0 && filteredPlaces.length === 0" class="panel__hint">
+            Seçilen kategoride yeni mekan yok.
+          </div>
+
+          <div v-if="!placesLoading && filteredPlaces.length > 0" class="stack stack--places">
+            <PlaceCard
+              v-for="place in visiblePlaces"
+              :key="place.id"
+              :place="placesStore.getSavedPlace(place.id) ?? place"
+              :saved="placesStore.isSaved(place.id)"
+              :highlighted="selectedPlaceId === place.id"
+              show-actions
+              @save="handleSavePlace(place)"
+              @remove="handleRemovePlace(place.id)"
+              @open="openPlace(place.id)"
+              @mark-visited="placesStore.markAsVisited(place.id)"
+              @select="handleSelectPlace(place)"
+            />
+            <button
+              v-if="placesRemaining > 0"
+              type="button"
+              class="btn btn--ghost places-show-more"
+              @click="showMorePlaces"
+            >
+              Daha fazla göster (+{{ placesRemaining }})
+            </button>
+          </div>
+        </section>
+
+        <p v-if="placesStore.storageError" class="alert alert--error">
+          {{ placesStore.storageError }}
+        </p>
+      </aside>
     </div>
   </div>
 </template>
@@ -589,9 +597,28 @@ function formatStampDate(iso?: string): string | undefined {
 }
 
 @media (min-width: 960px) {
-  .grid-two:has(.map-expandable:hover),
-  .grid-two:has(.map-expandable:focus-within) {
-    grid-template-columns: minmax(0, 1fr) min(580px, 50%);
+  .discover-layout:has(.map-expandable:hover),
+  .discover-layout:has(.map-expandable:focus-within) {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+  }
+}
+
+.map-expandable--center :deep(.map-wrapper__frame),
+.map-expandable--center :deep(.map-wrapper__canvas) {
+  min-height: 24rem;
+}
+
+@media (min-width: 960px) {
+  .map-expandable--center :deep(.map-wrapper__frame),
+  .map-expandable--center :deep(.map-wrapper__canvas) {
+    min-height: 28rem;
+  }
+}
+
+@media (min-width: 960px) {
+  .discover-layout:has(.map-expandable:hover) .discover-layout__sidebar,
+  .discover-layout:has(.map-expandable:focus-within) .discover-layout__sidebar {
+    align-self: start;
   }
 }
 

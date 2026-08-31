@@ -1,11 +1,12 @@
 ﻿<script setup lang="ts">
 import type { SearchResult } from '~/types/place'
 
-defineProps<{
+const props = defineProps<{
   loading?: boolean
   error?: string | null
   results?: SearchResult[]
   selectionMade?: boolean
+  autofocus?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -15,6 +16,7 @@ const emit = defineEmits<{
 }>()
 
 const query = ref('')
+const inputRef = ref<HTMLInputElement | null>(null)
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
 function onInput() {
@@ -32,6 +34,12 @@ function onClear() {
   emit('clear')
 }
 
+onMounted(() => {
+  if (props.autofocus) {
+    nextTick(() => inputRef.value?.focus())
+  }
+})
+
 onUnmounted(() => {
   if (debounceTimer) clearTimeout(debounceTimer)
 })
@@ -42,6 +50,7 @@ onUnmounted(() => {
     <div class="search-input__field">
       <input
         id="location-search"
+        ref="inputRef"
         v-model="query"
         type="search"
         placeholder="Şehir, semt veya adres…"

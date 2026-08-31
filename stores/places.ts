@@ -132,13 +132,13 @@ export const usePlacesStore = defineStore('places', () => {
     return savedPlaces.value.some(place => place.id === id)
   }
 
-  function addPlace(place: Place): SavedPlace {
+  function addPlace(place: Place, options?: { city?: string }): SavedPlace {
     initialize()
 
     const existing = getSavedPlace(place.id)
     if (existing) return existing
 
-    const savedPlace = mapPlaceToSavedPlace(place)
+    const savedPlace = mapPlaceToSavedPlace(place, undefined, options?.city)
 
     savedPlaces.value.push(savedPlace)
     persist()

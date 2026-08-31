@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || 'https://sehir-hafizasi.vercel.app'
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -16,6 +18,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       cartoApiKey: '',
+      siteUrl,
     },
   },
   nitro: {
@@ -99,7 +102,11 @@ export default defineNuxtConfig({
         },
         {
           property: 'og:image',
-          content: 'https://sehir-hafizasi.vercel.app/og-image.png',
+          content: `${siteUrl}/og-image.png`,
+        },
+        {
+          property: 'og:url',
+          content: siteUrl,
         },
         {
           property: 'og:type',

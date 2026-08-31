@@ -192,6 +192,8 @@ export interface SearchResult {
   displayName: string
   latitude: number
   longitude: number
+  /** Arama yapılan bölgenin şehir/il adı */
+  city?: string
   /** Leaflet fitBounds formatı: [[güney, batı], [kuzey, doğu]] */
   bounds?: [[number, number], [number, number]]
 }
@@ -416,14 +418,27 @@ export function viewboxFromBounds(bounds: [[number, number], [number, number]]):
   return `${west},${north},${east},${south}`
 }
 
+export function resolveSearchRegionCity(result: Pick<NominatimResult, 'address' | 'name' | 'display_name'>): string | undefined {
+  const fromAddress = extractCityFromNominatimAddress(result.address)
+  if (fromAddress) return fromAddress
+
+  const name = result.name?.trim()
+  if (name) return name
+
+  return result.display_name.split(',')[0]?.trim() || undefined
+}
+
 /** Nominatim ham sonucunu arama listesi modeline dönüştürür */
 export function mapNominatimToSearchResult(result: NominatimResult): SearchResult {
+  const city = resolveSearchRegionCity(result)
+
   return {
     id: String(result.place_id),
     displayName: result.display_name,
     latitude: parseFloat(result.lat),
     longitude: parseFloat(result.lon),
     bounds: parseNominatimBounds(result.boundingbox),
+    ...(city ? { city } : {}),
   }
 }
 
@@ -470,8 +485,12 @@ export function mapOverpassResponse(elements: OverpassElement[]): Place[] {
 }
 
 /** Place modelini kayıt için SavedPlace'a dönüştürür */
-export function mapPlaceToSavedPlace(place: Place, savedAt = new Date().toISOString().slice(0, 10)): SavedPlace {
-  const city = resolvePlaceCity(place)
+export function mapPlaceToSavedPlace(
+  place: Place,
+  savedAt = new Date().toISOString().slice(0, 10),
+  cityOverride?: string,
+): SavedPlace {
+  const city = cityOverride?.trim() || resolvePlaceCity(place)
 
   return {
     ...place,

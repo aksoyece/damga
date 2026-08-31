@@ -128,7 +128,7 @@ function handleSave() {
 
   if (!place.value) return
 
-  placesStore.addPlace(place.value)
+  placesStore.addPlace(place.value, { city: place.value.city })
 
   saveMessage.value = 'Mekan arşivinize eklendi. Artık puan ve not ekleyebilirsiniz.'
 

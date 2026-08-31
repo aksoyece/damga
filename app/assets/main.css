@@ -387,7 +387,50 @@ select {
   color: var(--text-subtle);
 }
 
-/* ── Grid ── */
+/* ── Discover layout (harita merkez) ── */
+.discover-layout {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 960px) {
+  .discover-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+    align-items: start;
+  }
+}
+
+.discover-layout__map {
+  min-width: 0;
+}
+
+@media (min-width: 960px) {
+  .discover-layout__sidebar {
+    position: sticky;
+    top: calc(var(--header-height) + 1.25rem);
+    max-height: calc(100vh - var(--header-height) - 2.5rem);
+    overflow-y: auto;
+  }
+}
+
+.search-landing {
+  max-width: 40rem;
+  margin: 0 auto 1.5rem;
+  padding: 0.5rem 0 1rem;
+}
+
+.search-landing__hint {
+  text-align: center;
+}
+
+.page-hero__search-hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+/* ── Grid (legacy) ── */
 .grid-two {
   display: grid;
   gap: 1.25rem;
