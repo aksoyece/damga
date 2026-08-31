@@ -45,23 +45,15 @@ if (import.meta.client) {
 
 
 function toPlace(source: Place | SavedPlace): Place {
-
   return {
-
     id: source.id,
-
     name: source.name,
-
     category: source.category,
-
     latitude: source.latitude,
-
     longitude: source.longitude,
-
     address: source.address,
-
+    city: source.city,
   }
-
 }
 
 

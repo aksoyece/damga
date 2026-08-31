@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import type { LocalStorageData, Place, SavedPlace, VisitStatus } from '~/types/place'
-import { mapPlaceToSavedPlace } from '~/types/place'
+import { mapPlaceToSavedPlace, resolvePlaceCity } from '~/types/place'
 
 const STORAGE_KEY = 'sehir-hafiza'
 
@@ -102,8 +102,22 @@ export const usePlacesStore = defineStore('places', () => {
     if (initialized.value || !import.meta.client) return
 
     const { data, readError } = readFromStorage()
-    savedPlaces.value = data.savedPlaces
+    let migrated = false
+
+    savedPlaces.value = data.savedPlaces.map((place) => {
+      if (place.city?.trim()) return place
+
+      const city = resolvePlaceCity(place)
+      if (!city) return place
+
+      migrated = true
+      return { ...place, city }
+    })
     initialized.value = true
+
+    if (migrated) {
+      persist()
+    }
 
     if (readError) {
       storageError.value = 'Kaydedilen mekanlar okunamadı. Boş liste ile devam ediliyor.'

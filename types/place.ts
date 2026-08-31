@@ -5,6 +5,8 @@ export interface Place {
   latitude: number
   longitude: number
   address?: string
+  /** Şehir / ilçe — kayıt ve arşiv filtresi için */
+  city?: string
 }
 
 export interface SavedPlace extends Place {
@@ -13,9 +15,26 @@ export interface SavedPlace extends Place {
   note?: string
   savedAt: string
   visitedAt?: string
+  city?: string
 }
 
 export type VisitStatus = SavedPlace['status']
+
+export type VisitDatePreset = 'all' | 'last30' | 'thisMonth' | 'lastMonth' | 'custom'
+
+export interface NominatimAddress {
+  city?: string
+  town?: string
+  village?: string
+  municipality?: string
+  county?: string
+  state?: string
+  province?: string
+  region?: string
+  city_district?: string
+  suburb?: string
+  [key: string]: string | undefined
+}
 
 export interface NominatimResult {
   place_id: number
@@ -30,6 +49,7 @@ export interface NominatimResult {
   importance?: number
   addresstype?: string
   boundingbox?: [string, string, string, string]
+  address?: NominatimAddress
 }
 
 /** Overpass bbox clamp: bu eşiği aşan alanlar merkeze göre küçültülür */
@@ -230,6 +250,74 @@ function buildAddressFromTags(tags: Record<string, string>): string | undefined 
   return parts.length > 0 ? parts.join(' ') : undefined
 }
 
+/** Nominatim addressdetails nesnesinden şehir / il adı */
+export function extractCityFromNominatimAddress(address?: NominatimAddress): string | undefined {
+  if (!address) return undefined
+
+  const candidates = [
+    address.city,
+    address.town,
+    address.municipality,
+    address.village,
+    address.county,
+    address.state,
+    address.province,
+    address.region,
+  ]
+
+  for (const value of candidates) {
+    const trimmed = value?.trim()
+    if (trimmed) return trimmed
+  }
+
+  return undefined
+}
+
+/** Overpass OSM etiketlerinden şehir */
+export function extractCityFromOsmTags(tags: Record<string, string>): string | undefined {
+  const candidates = [
+    tags['addr:city'],
+    tags['addr:town'],
+    tags['addr:municipality'],
+    tags['addr:province'],
+    tags['addr:state'],
+    tags['is_in:city'],
+    tags['is_in:province'],
+  ]
+
+  for (const value of candidates) {
+    const trimmed = value?.trim()
+    if (trimmed) return trimmed
+  }
+
+  return undefined
+}
+
+/**
+ * Eski kayıtlarda city yoksa display_name / address string'inden yedek çıkarım.
+ * Yeni kayıtlarda tercih edilmez; Nominatim/OSM alanları önceliklidir.
+ */
+export function extractCityFromAddressFallback(address?: string): string | undefined {
+  if (!address?.trim()) return undefined
+
+  const parts = address.split(',').map(part => part.trim()).filter(Boolean)
+  if (parts.length < 2) return undefined
+
+  // Nominatim TR: "yer, mahalle, ilçe, il, ülke" — il genelde sondan 2. parça
+  if (parts.length >= 3) {
+    const candidate = parts[parts.length - 2]
+    if (candidate && !/^\d/.test(candidate) && candidate.length > 1) {
+      return candidate
+    }
+  }
+
+  return parts[1]
+}
+
+export function resolvePlaceCity(place: Pick<Place, 'city' | 'address'>): string | undefined {
+  return place.city?.trim() || extractCityFromAddressFallback(place.address)
+}
+
 /** Nominatim boundingbox → Leaflet [[güney, batı], [kuzey, doğu]] */
 export function parseNominatimBounds(
   boundingbox?: [string, string, string, string],
@@ -285,6 +373,7 @@ export function mapNominatimPoiToPlace(result: NominatimResult): Place | null {
     latitude,
     longitude,
     address: result.display_name,
+    city: extractCityFromNominatimAddress(result.address),
   }
 }
 
@@ -357,6 +446,7 @@ export function mapOverpassElementToPlace(element: OverpassElement): Place | nul
     latitude,
     longitude,
     address: buildAddressFromTags(tags),
+    city: extractCityFromOsmTags(tags),
   }
 }
 
@@ -381,11 +471,57 @@ export function mapOverpassResponse(elements: OverpassElement[]): Place[] {
 
 /** Place modelini kayıt için SavedPlace'a dönüştürür */
 export function mapPlaceToSavedPlace(place: Place, savedAt = new Date().toISOString().slice(0, 10)): SavedPlace {
+  const city = resolvePlaceCity(place)
+
   return {
     ...place,
     status: 'planned',
     savedAt,
+    ...(city ? { city } : {}),
   }
+}
+
+/** visitedAt ISO tarihinin (YYYY-MM-DD) verilen aralıkta olup olmadığını kontrol eder */
+export function isVisitedInDateRange(
+  visitedAt: string | undefined,
+  fromISO: string,
+  toISO: string,
+): boolean {
+  if (!visitedAt) return false
+  return visitedAt >= fromISO && visitedAt <= toISO
+}
+
+export function getVisitDateRange(preset: VisitDatePreset, customFrom?: string, customTo?: string): {
+  from: string
+  to: string
+} | null {
+  if (preset === 'all') return null
+
+  const today = new Date()
+  const toISO = (date: Date) => date.toISOString().slice(0, 10)
+
+  if (preset === 'custom') {
+    const from = customFrom?.trim()
+    const to = customTo?.trim()
+    if (!from || !to) return null
+    return from <= to ? { from, to } : { from: to, to: from }
+  }
+
+  if (preset === 'last30') {
+    const from = new Date(today)
+    from.setDate(from.getDate() - 30)
+    return { from: toISO(from), to: toISO(today) }
+  }
+
+  if (preset === 'thisMonth') {
+    const from = new Date(today.getFullYear(), today.getMonth(), 1)
+    return { from: toISO(from), to: toISO(today) }
+  }
+
+  // lastMonth
+  const from = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+  const to = new Date(today.getFullYear(), today.getMonth(), 0)
+  return { from: toISO(from), to: toISO(to) }
 }
 
 export function getCategoryLabel(category: string): string {
