@@ -88,6 +88,10 @@ export default defineNuxtConfig({
       ],
       meta: [
         {
+          name: 'color-scheme',
+          content: 'light dark',
+        },
+        {
           name: 'description',
           content: 'Damga — kişisel gezi defteriniz. Mekan keşfedin, listenizi oluşturun, not alın ve ziyaretlerinizi damgalayın. Hesap yok; verileriniz tarayıcınızda kalır.',
         },
@@ -114,6 +118,14 @@ export default defineNuxtConfig({
         {
           name: 'theme-color',
           content: '#FF5A1F',
+        },
+      ],
+      script: [
+        {
+          key: 'theme-init',
+          innerHTML: `(function(){try{var s=localStorage.getItem('damga-theme');var d=s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light')}catch(e){document.documentElement.setAttribute('data-theme','light')}})();`,
+          type: 'text/javascript',
+          tagPosition: 'head',
         },
       ],
     },

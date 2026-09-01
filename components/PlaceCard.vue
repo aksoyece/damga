@@ -138,26 +138,26 @@ function onCardClick() {
   border: 1.5px solid var(--border);
   border-left: 4px solid var(--cat-accent);
   border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .place-card:hover {
   z-index: 10;
-  background: #fff;
+  background: var(--bg-card);
   border-color: color-mix(in srgb, var(--cat-accent) 35%, var(--border));
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
 .place-card--highlighted {
-  background: #fff;
+  background: var(--bg-card);
   border-color: var(--cat-accent);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 .place-card--visited {
-  background: #fff;
+  background: var(--bg-card);
 }
 
 .place-card--compact .place-card__body {

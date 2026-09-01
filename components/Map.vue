@@ -362,7 +362,7 @@ onUnmounted(() => {
 .map-wrapper__frame {
   position: relative;
   min-height: 18rem;
-  background: #EDE8DF;
+  background: var(--map-surface);
   transition: min-height 0.28s ease;
 }
 
@@ -393,7 +393,7 @@ onUnmounted(() => {
   z-index: 2;
   display: grid;
   place-content: center;
-  background: #EDE8DF;
+  background: var(--map-surface);
   color: var(--text-muted);
   font-size: 0.8125rem;
 }

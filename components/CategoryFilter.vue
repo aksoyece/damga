@@ -87,7 +87,7 @@ const emit = defineEmits<{
 .category-filter__button--active {
   border-color: var(--primary);
   background: var(--primary);
-  color: #fff;
+  color: var(--on-primary);
   box-shadow: none;
 }
 </style>
