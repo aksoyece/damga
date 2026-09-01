@@ -25,11 +25,11 @@ function goHome(event: MouseEvent) {
         </NuxtLink>
 
         <div class="layout__actions">
-          <ThemeToggle />
           <nav class="layout__nav">
             <NuxtLink to="/">Günlük</NuxtLink>
             <NuxtLink to="/saved">Arşivim</NuxtLink>
           </nav>
+          <ThemeToggle />
         </div>
       </div>
     </header>

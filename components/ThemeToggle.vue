@@ -17,9 +17,9 @@ const { theme, toggleTheme } = useTheme()
       fill="none"
       aria-hidden="true"
     >
-      <circle cx="12" cy="12" r="4.25" stroke="currentColor" stroke-width="1.75" />
+      <circle cx="12" cy="12" r="4.5" fill="currentColor" />
       <path
-        d="M12 2.75v2.1M12 19.15v2.1M4.85 4.85l1.48 1.48M17.67 17.67l1.48 1.48M2.75 12h2.1M19.15 12h2.1M4.85 19.15l1.48-1.48M17.67 6.33l1.48-1.48"
+        d="M12 2.5v2.25M12 19.25v2.25M4.72 4.72l1.59 1.59M17.69 17.69l1.59 1.59M2.5 12h2.25M19.25 12h2.25M4.72 19.28l1.59-1.59M17.69 6.31l1.59-1.59"
         stroke="currentColor"
         stroke-width="1.75"
         stroke-linecap="round"
@@ -29,14 +29,11 @@ const { theme, toggleTheme } = useTheme()
       v-else
       class="theme-toggle__icon"
       viewBox="0 0 24 24"
-      fill="none"
+      fill="currentColor"
       aria-hidden="true"
     >
       <path
-        d="M21 14.4A7.5 7.5 0 0 1 9.6 3a6.6 6.6 0 1 0 11.4 11.4Z"
-        stroke="currentColor"
-        stroke-width="1.75"
-        stroke-linejoin="round"
+        d="M21 12.58A8.5 8.5 0 1 1 11.42 3a6.75 6.75 0 1 0 9.58 9.58Z"
       />
     </svg>
   </button>
@@ -46,8 +43,9 @@ const { theme, toggleTheme } = useTheme()
 .theme-toggle {
   display: grid;
   place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  flex-shrink: 0;
+  width: 2.375rem;
+  height: 2.375rem;
   padding: 0;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-lg);
@@ -55,7 +53,7 @@ const { theme, toggleTheme } = useTheme()
   color: var(--text-muted);
   cursor: pointer;
   box-shadow: var(--shadow-sm);
-  transition: border-color var(--transition), color var(--transition), background var(--transition);
+  transition: border-color var(--transition), color var(--transition), background var(--transition), transform var(--transition);
 }
 
 .theme-toggle:hover {
@@ -64,8 +62,12 @@ const { theme, toggleTheme } = useTheme()
   background: var(--primary-soft);
 }
 
+.theme-toggle:active {
+  transform: scale(0.96);
+}
+
 .theme-toggle__icon {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.2rem;
+  height: 1.2rem;
 }
 </style>
